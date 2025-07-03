@@ -2,14 +2,14 @@ import React from 'react'
 import TypeIt from 'typeit-react'
 function Home() {
   return (
-    <div className='bg-gradient-to-br from-black via-zinc-800 to-zinc-900 w-full h-screen'>
+    <div className='bg-grid'>
 
-    <div className='flex flex-col justify-center items-center'>
-      <h1 className='text-center text-5xl font-poppins text-gray-200 font-extrabold pt-20 '>
+    <div className=' items-center flex flex-col justify-center'>         
+      <h1 className='gradient-text text-center text-5xl font-poppins font-extrabold pt-8 text-white-400 z-10'>
        QuizForge AI
 
       </h1>
-      <p className=' text-lg font-sans text-gray-400  mt-10'>
+      <p className='text-lg font-sans text-gray-100 mt-10 z-10'>
 
       <TypeIt
               options={{ speed: 50,  }}

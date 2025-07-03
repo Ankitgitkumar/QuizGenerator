@@ -1,4 +1,5 @@
-
+import Navbar from './components/Navbar/Navbar'
+import Home from './components/Home/Home'
 
 import './App.css'
 
@@ -7,9 +8,9 @@ function App() {
 
   return (
     <>
-      <div>
-        <h1>Quiz Generator</h1>
-      </div>
+     <Navbar />
+     <Home />
+     
     </>
   )
 }

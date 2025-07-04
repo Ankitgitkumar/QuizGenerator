@@ -15,6 +15,7 @@ body {
   min-height: 100vh;
   position: fixed;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   padding: 120px 24px 160px 24px;
   pointer-events: none;

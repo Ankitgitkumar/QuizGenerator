@@ -2,9 +2,9 @@ import React from 'react'
 import TypeIt from 'typeit-react'
 function Home() {
   return (
-    <div className='bg-grid'>
+    <div className=''>
 
-    <div className=' items-center flex flex-col justify-center'>         
+    <div className=' items-center flex flex-col justify-center z-10 relative'>         
       <h1 className='gradient-text text-center text-5xl font-poppins font-extrabold pt-8 text-white-400 z-10'>
        QuizForge AI
 
@@ -28,3 +28,4 @@ function Home() {
 }
 
 export default Home
+

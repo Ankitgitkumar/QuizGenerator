@@ -6,6 +6,7 @@ import { Routes, Route } from 'react-router-dom'
 
 import './App.css'
 import './index.css'
+
 import Dashboard from './Components/teacher/Dashboard'
 import MyQuizzes from './components/Teacher/MyQuizzes.jsx'
 import QuizView from './components/Teacher/QuizView.jsx'
@@ -23,6 +24,8 @@ function App() {
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/finalresults" element={<FinalResult />} />
     </Routes>
+
+
   )
 }
 

@@ -12,9 +12,12 @@ import MyQuizzes from './components/Teacher/MyQuizzes.jsx'
 import QuizView from './components/Teacher/QuizView.jsx'
 import Leaderboard from './components/Teacher/Leaderboard.jsx'
 import FinalResult from './components/Teacher/FinalResult.jsx'
+import Footer from './components/Footer/Footer.jsx'
 
 function App() {
   return(
+    <>
+    <Navbar />
     <Routes>
       <Route path="/" element={<Home/>} />
       <Route path="/dashboard" element={<Dashboard />} />
@@ -24,6 +27,8 @@ function App() {
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/finalresults" element={<FinalResult />} />
     </Routes>
+    <Footer/>
+    </>
 
 
   )

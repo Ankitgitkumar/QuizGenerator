@@ -28,8 +28,8 @@ const classSchema =new Schema({
 
 
 
-const studentModel =Mongoose.model("User",studentSchema)
-const teacherModel = Mongoose.model("Admin", teacherSchema);
-const classModel = Mongoose.model("Course", classSchema);
+const studentModel =Mongoose.model("Student",studentSchema)
+const teacherModel = Mongoose.model("Teacher", teacherSchema);
+const classModel = Mongoose.model("Classroom", classSchema);
 
 export { studentModel, teacherModel, classModel };

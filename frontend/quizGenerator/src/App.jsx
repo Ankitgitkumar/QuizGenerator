@@ -13,6 +13,8 @@ import QuizView from './components/Teacher/QuizView.jsx'
 import Leaderboard from './components/Teacher/Leaderboard.jsx'
 import FinalResult from './components/Teacher/FinalResult.jsx'
 import Footer from './components/Footer/Footer.jsx'
+import Signup from './components/register/Signup.jsx'
+import Signin from './components/register/Signin.jsx'
 
 function App() {
   return(
@@ -26,6 +28,8 @@ function App() {
       <Route path="/quiz/:id" element={<QuizView />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/finalresults" element={<FinalResult />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/signin" element={<Signin />} />
     </Routes>
     <Footer/>
     </>

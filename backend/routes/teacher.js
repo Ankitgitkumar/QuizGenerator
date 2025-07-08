@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { teacherModel } from "../db";
+import { teacherModel } from "../db.js";
+import express from "express";
+const route = express.Router();
 
 
 route.post("/signup",async (req,res)=> {
@@ -22,3 +24,5 @@ catch(e){
     res.send("Error signing up user: " + e.message);
 }
 })
+
+export default route; 

@@ -22,12 +22,12 @@ function App() {
     <Navbar />
     <Routes>
       <Route path="/" element={<Home/>} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/teacher/dashboard" element={<Dashboard />} />
       <Route path="/createquiz" element={<CreateQuiz />} />
-      <Route path="/myquizzes" element={<MyQuizzes />} />
-      <Route path="/quiz/:id" element={<QuizView />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
-      <Route path="/finalresults" element={<FinalResult />} />
+      <Route path="/teacher/myquizzes" element={<MyQuizzes />} />
+      <Route path="/teacher/quiz/:id" element={<QuizView />} />
+      <Route path="/teacher/leaderboard" element={<Leaderboard />} />
+      <Route path="/teacher/finalresults" element={<FinalResult />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/signin" element={<Signin />} />
     </Routes>

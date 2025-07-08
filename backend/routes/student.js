@@ -1,7 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { studentModel } from "../db";
-
+import { studentModel } from "../db.js";
+import express from "express"
+const route = express.Router();
+const JWT_STUDENT_PASSWORD="student_password_jwt"
 
 route.post("/signup",async (req,res)=> {
     try{
@@ -22,3 +24,31 @@ catch(e){
     res.send("Error signing up user: " + e.message);
 }
 })
+
+route.post('/signin', async (req,res)=> {
+    try {
+        const {email,password}=req.body;
+        const student =await studentModel.findOne({email});
+        if(!student){
+            return res.status(404).send("Student Not Found");
+        }
+        const isPasswordCorrect = await bcrypt.compare(password, student.password);
+        if(!isPasswordCorrect){
+            return res.status(401).send("Incorrect Password");
+        }
+        const token=jwt.sign(
+            {
+                studentId:student._id,
+             
+            },JWT_STUDENT_PASSWORD
+        )
+
+        res.status(200).json({ message: "Student signed in", token });
+
+    } catch (error) {
+        res.status(500).send("Error signing in user: " + error.message);
+    }
+})
+
+
+export default route;

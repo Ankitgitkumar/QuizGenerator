@@ -29,23 +29,25 @@ function Signup() {
         try {
           const res = await axios.post("http://localhost:3141/api/v1/teacher/signup", teacher);
           console.log("Teacher Signup Success:", res.data);
-          navigate("/dashboard");
+          navigate("/teacher/dashboard");
         } catch (error) {
           console.log("Teacher Signup Error:", error.response?.data || error.message);
         }
       } else if (role === "student") {
-        // const student = {
-        //   email: email,
-        //   password: password,
-        // };
-        // try {
-        //   const res = await axios.post("http://localhost:3141/api/v1/student/signup", student);
-        //   console.log("Student Signup Success:", res.data);
-        //   navigate("/dashboard");
-        // } catch (error) {
-        //   console.log("Student Signup Error:", error.response?.data || error.message);
-        // }
-        console.log("Student signup not implemented yet.");
+        const student = {
+            firstName: fN,
+            lastName: lN,
+          email: email,
+          password: password,
+        };
+        try {
+          const res = await axios.post("http://localhost:3141/api/v1/student/signup", student);
+          console.log("Student Signup Success:", res);
+          navigate("/student/dashboard");
+        } catch (error) {
+          console.log("Student Signup Error:", error.response?.data || error.message);
+        }
+      
       }
     } else {
       console.log("Please fill all fields.");

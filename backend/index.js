@@ -7,8 +7,11 @@ app.use(express.json());
 app.use(cors()); 
 
 import teacherRoute from './routes/teacher.js';
+import studentRoute from './routes/student.js';
 
 app.use("/api/v1/teacher",teacherRoute)
+app.use("/api/v1/student",studentRoute)
+
 
 
 async function  main(){

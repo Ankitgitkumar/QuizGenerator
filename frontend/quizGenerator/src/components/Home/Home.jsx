@@ -1,7 +1,12 @@
 import React from 'react';
 import TypeIt from 'typeit-react';
+import { useNavigate } from 'react-router-dom';
+
 
 function Home() {
+
+
+
   return (
 
 
@@ -46,8 +51,8 @@ function Home() {
             <li>Able to view the previous attempted tests and analyze your performance.</li>
           </ul>
           <div className='flex gap-6 mt-6 px-5 flex-wrap justify-center'>
-            <button className='bg-gray-400 px-4 py-2 text-black rounded-lg font-bold text-lg'>Sign in</button>
-            <button className='bg-gray-400 px-4 py-2 text-black rounded-lg font-bold text-lg'>Sign up</button>
+            <button  className='bg-gray-400 px-4 py-2 text-black rounded-lg font-bold text-lg'>Sign in</button>
+            <button  className='bg-gray-400 px-4 py-2 text-black rounded-lg font-bold text-lg'>Sign up</button>
           </div>
         </div>
       </div>

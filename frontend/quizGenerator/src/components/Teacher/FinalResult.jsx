@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const finalResults = [
   { name: 'Anjali Mehta', score: 90, correct: 9, incorrect: 1, time: '3m 20s' },
@@ -10,6 +11,14 @@ const finalResults = [
 const FinalResult = () => {
   return (
     <div className="min-h-screen border-2  px-6 py-10">
+      <div className="absolute top-4 right-4">
+    <Link 
+      to="/myquizzes" 
+      className="text-sm bg-gray-200 text-black font-semibold px-3 py-1 rounded hover:bg-gray-300"
+    >
+      Back
+    </Link>
+    </div>
       <h1 className="text-3xl font-bold text-white mb-2">📋 Final Results</h1>
       <p className="text-gray-300 mb-6">Quiz: General Knowledge | Total Questions: 10</p>
 

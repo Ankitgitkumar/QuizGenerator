@@ -6,7 +6,6 @@ const CreateQuiz = () => {
 
   return (
         <>
-    
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">  
         <div className="absolute top-4 right-4">
     <Link 
@@ -33,6 +32,19 @@ const CreateQuiz = () => {
           
           className="w-full p-2 border rounded"
         />
+        <input
+          type="datetime-local"
+          placeholder="Start Time"
+          className="w-full p-2 border rounded"
+          required
+        />
+        <input
+         type="number"
+         placeholder="Duration in minutes"
+         className="w-full p-2 border rounded"
+        required
+        />
+
         <input
           type="file"
           accept=".pdf"

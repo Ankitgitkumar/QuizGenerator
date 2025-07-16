@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { studentModel } from "../db.js";
+import { studentModel,classModel } from "../db.js";
 import express from "express"
+import studentMiddleware from "../middlewares/student.js";
 const route = express.Router();
 const JWT_STUDENT_PASSWORD="student_password_jwt"
 
@@ -50,5 +51,25 @@ route.post('/signin', async (req,res)=> {
     }
 })
 
+route.post("/joinclassroom",studentMiddleware, async (req,res)=>{
+    const {classroomCode}=req.body;
+    
+    const existingClass = await classModel.findOne({ _id:classroomCode})
+
+    if(!existingClass){
+        return res.status(404).send("Classroom Not found");
+    }
+
+   const student=await existingClass.students.push(req.id);
+   if(!student){
+        return res.status(404).send("Student not found in classroom");
+   }
+   await existingClass.save();
+
+    res.status(200).send("Student joined classroom successfully");
+
+   
+
+})
 
 export default route;

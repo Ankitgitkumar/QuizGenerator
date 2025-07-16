@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { teacherModel } from "../db.js";
+import { teacherModel ,classModel} from "../db.js";
 import express from "express";
+import teacherMiddleware from "../middlewares/teacher.js";
 const route = express.Router();
 const JWT_TEACHER_PASSWORD="teacher_password_jwt"
 
@@ -48,6 +49,21 @@ route.post('/signin', async (req,res)=> {
     } catch (error) {
         res.status(500).send("Error signing in user: " + error.message);
     }
+})
+
+route.post("/create-classroom",teacherMiddleware, async (req,res)=>{
+    const {name}=req.body;
+
+    const newclassroom= await classModel.create({
+        name,
+        creatorId:req.Id
+    });
+
+    if(!newclassroom){
+        return res.status(500).send("Error creating classroom");
+    }
+    res.status(201).json({ message: "Classroom created successfully", classroom: newclassroom });
+    
 })
 
 export default route; 

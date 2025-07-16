@@ -22,8 +22,24 @@ const teacherSchema=new Schema({
 
 const classSchema =new Schema({
     name:String,
-    creatorId:ObjectId
+    creatorId:ObjectId,
+    students:[{ type: ObjectId, ref: 'Student' }],
 
+})
+
+const testSchema =new Schema({
+    title:String,
+    topic:String,
+    startTime: {
+        type: Date,
+        required: true,
+      },
+    endTime: {
+        type: Date,
+        required: true,
+      },
+    duration:Number,  //in minutes
+     classId:ObjectId,
 })
 
 
@@ -31,5 +47,6 @@ const classSchema =new Schema({
 const studentModel =Mongoose.model("Student",studentSchema)
 const teacherModel = Mongoose.model("Teacher", teacherSchema);
 const classModel = Mongoose.model("Classroom", classSchema);
+const testModel = Mongoose.model("Test", testSchema);
 
-export { studentModel, teacherModel, classModel };
+export { studentModel, teacherModel, classModel, testModel };

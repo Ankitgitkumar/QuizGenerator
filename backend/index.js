@@ -7,21 +7,21 @@ import dotenv from "dotenv";
 // Import routes
 import teacherRoute from './routes/teacher.js';
 import studentRoute from './routes/student.js';
-import quizRoutes from './routes/teacher.js'; // 👈 for quizzes created by teacher
+import quizRoutes from './routes/teacher.js'; 
 
 dotenv.config();
 
 const app = express();
 
 // Middleware
+
 app.use(express.json());
 app.use(cors());
 app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true
 }));
-// app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from 'public' directory
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve uploaded
+
 
 
 // Routes

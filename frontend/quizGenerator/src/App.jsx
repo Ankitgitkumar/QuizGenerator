@@ -41,24 +41,6 @@ function App() {
       <Route path="/" element={<Home/>} />
       <Route path="/teacher/dashboard" element={<Dashboard />} />
       <Route path="/teacher/createquiz" element={<CreateQuiz />} />
-<<<<<<< HEAD
-=======
-
-      <Route path="/myquizzes" element={<MyQuizzes />} />
-      <Route path="/quiz/:id" element={<QuizView />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
-      <Route path="/finalresults" element={<FinalResult />} />
-      <Route path="/student/dashboard" element={<StudentDashboard />} />
-      <Route path="/student/join-classroom" element={<JoinClassroom />} />
-      <Route path="/student/practice-quiz" element={<PracticeQuiz />} />
-      <Route path="/student/practice-quiz/generate-quiz" element={<GenerateQuiz />} />
-      <Route path="/student/practice-quiz/available-quizzes" element={<AvailableQuizzes />} />
-      <Route path="/student/practice-quiz/history" element={<PreviousAttempts />} />
-      <Route path={'/student/practice-quiz/attempt/:id'} element={<PracticeQuizAttempt />} />
-      <Route path="/student/practice-quiz/attempt/:id/review" element={<PracticeQuizReview />} />
-
-
->>>>>>> f7b7c122fc0c616b74c22333f8d4368e5848870f
       <Route path="/teacher/myquizzes" element={<MyQuizzes />} />
       <Route path="/teacher/quiz/:id" element={<QuizView />} />
       <Route path="/teacher/leaderboard" element={<Leaderboard />} />

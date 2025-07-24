@@ -28,7 +28,7 @@ const Leaderboard = () => {
     <div className="min-h-screen px-6 py-10">
         <div className="absolute top-4 right-4">
     <Link 
-      to="/dashboard" 
+      to="/teacher/dashboard" 
       className="text-sm bg-gray-200 text-black font-semibold px-3 py-1 rounded hover:bg-gray-300"
     >
       Dashboard

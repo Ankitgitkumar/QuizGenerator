@@ -27,6 +27,7 @@ function Signin() {
             try {
               const res = await axios.post("http://localhost:3141/api/v1/teacher/signin", teacher);
               console.log("Teacher Signin Success:", res.data);
+              localStorage.setItem("teacherToken", res.data.token);
               navigate("/teacher/dashboard");
             } catch (error) {
               console.log("Teacher Signup Error:", error.response?.data || error.message);
@@ -40,6 +41,7 @@ function Signin() {
             try {
               const res = await axios.post("http://localhost:3141/api/v1/student/signin", student);
               console.log("Student Signin Success:", res);
+              localStorage.setItem("studentToken", res.data.token);
               navigate("/student/dashboard");
             } catch (error) {
               console.log("Student Signup Error:", error.response?.data || error.message);

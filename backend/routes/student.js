@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { studentModel } from "../db.js";
+import models from "../db.js";
+const studentModel = models.studentModel;
+
 import express from "express"
 const route = express.Router();
 const JWT_STUDENT_PASSWORD="student_password_jwt"

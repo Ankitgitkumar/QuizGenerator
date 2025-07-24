@@ -1,19 +1,37 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { teacherModel } from "../db.js";
-import express from "express";
-const route = express.Router();
-const JWT_TEACHER_PASSWORD="teacher_password_jwt"
+import models from "../db.js";
+const teacherModel = models.teacherModel;
+import { updateQuestion } from "../controllers/questionController.js";
+import {getTeacherProfile} from "../controllers/teacherController.js";
 
-route.post("/signup",async (req,res)=> {
-    try{
-    const {email,password,firstName,lastName}=req.body;
-    
-    const hashedPassword= await bcrypt.hash(password,10);
+import express from "express";
+
+const route = express.Router();
+const JWT_TEACHER_PASSWORD = "teacher_password_jwt";
+import {
+  createQuiz,
+  getMyQuizzes,
+  getQuizById,
+  scheduleQuiz,
+  editQuiz,
+  deleteQuiz,
+
+} from "../controllers/quizController.js";
+import teacherMiddleware from "../middlewares/teacher.js";
+import upload from "../middlewares/multer.js";
+
+
+
+route.post("/signup", async (req, res) => {
+    try {
+        const { email, password, firstName, lastName } = req.body;
+
+        const hashedPassword = await bcrypt.hash(password, 10);
 
    await teacherModel.create({
         email,
-        password:hashedPassword,
+        password: hashedPassword,
         firstName,
         lastName,
     })
@@ -49,5 +67,21 @@ route.post('/signin', async (req,res)=> {
         res.status(500).send("Error signing in user: " + error.message);
     }
 })
+
+
+route.get("/me",teacherMiddleware, getTeacherProfile);
+
+route.post("/create", teacherMiddleware, upload.single("pdf"), createQuiz);
+route.get("/quizzes", teacherMiddleware, getMyQuizzes);
+
+route.patch("/quiz/:id/schedule", teacherMiddleware, scheduleQuiz); // Schedule quiz
+route.patch("/quiz/:id", teacherMiddleware, editQuiz);              // Edit quiz
+route.delete("/quiz/:id", teacherMiddleware, deleteQuiz);  // Delete quiz
+route.patch("/question/:id",teacherMiddleware, updateQuestion);
+//Keep dynamic :id route at the bottom
+route.get("/:id", teacherMiddleware, getQuizById);
+
+
+
 
 export default route; 

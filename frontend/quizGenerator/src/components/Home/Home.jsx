@@ -1,6 +1,8 @@
 import React from 'react';
 import TypeIt from 'typeit-react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../Navbar/Navbar';
+import Footer from '../Footer/Footer';
 
 
 function Home() {
@@ -9,8 +11,8 @@ function Home() {
 
   return (
 
-
-
+    <>
+    <Navbar />
     <div className="px-4 sm:px-10">
       <h1 className='gradient-text text-center text-5xl font-poppins font-extrabold pt-8 mt-20 text-white-400 z-10'>
         QuizForge AI
@@ -71,6 +73,8 @@ function Home() {
         </p>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }
 

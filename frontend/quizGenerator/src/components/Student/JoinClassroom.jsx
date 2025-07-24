@@ -8,7 +8,7 @@ const JoinClassroom = () => {
 
   const handleJoin = (e) => {
     e.preventDefault();
-    navigate('/student');
+    navigate('/student/myclassrooms'); // Redirect to MyClassrooms after joining
   };
 
   return (

@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 // Import routes
 import teacherRoute from './routes/teacher.js';
 import studentRoute from './routes/student.js';
+
 import quizRoutes from './routes/teacher.js'; 
 
 dotenv.config();
@@ -21,6 +22,15 @@ app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true
 }));
+
+
+import classroomRoute from './routes/classroom.js';
+import testRoute from './routes/test.js';
+
+app.use("/api/v1/teacher",teacherRoute)
+app.use("/api/v1/student",studentRoute)
+app.use("/api/v1/classroom",classroomRoute)
+app.use("/api/v1/test",testRoute)
 
 
 

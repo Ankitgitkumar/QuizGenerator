@@ -1,9 +1,17 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+<<<<<<< HEAD
 import models from "../db.js";
 const teacherModel = models.teacherModel;
 import { updateQuestion } from "../controllers/questionController.js";
 import {getTeacherProfile} from "../controllers/teacherController.js";
+=======
+import { teacherModel ,classModel} from "../db.js";
+import express from "express";
+import teacherMiddleware from "../middlewares/teacher.js";
+const route = express.Router();
+const JWT_TEACHER_PASSWORD="teacher_password_jwt"
+>>>>>>> f7b7c122fc0c616b74c22333f8d4368e5848870f
 
 import express from "express";
 
@@ -68,6 +76,7 @@ route.post('/signin', async (req,res)=> {
     }
 })
 
+<<<<<<< HEAD
 
 route.get("/me",teacherMiddleware, getTeacherProfile);
 
@@ -83,5 +92,21 @@ route.get("/:id", teacherMiddleware, getQuizById);
 
 
 
+=======
+route.post("/create-classroom",teacherMiddleware, async (req,res)=>{
+    const {name}=req.body;
+
+    const newclassroom= await classModel.create({
+        name,
+        creatorId:req.Id
+    });
+
+    if(!newclassroom){
+        return res.status(500).send("Error creating classroom");
+    }
+    res.status(201).json({ message: "Classroom created successfully", classroom: newclassroom });
+    
+})
+>>>>>>> f7b7c122fc0c616b74c22333f8d4368e5848870f
 
 export default route; 

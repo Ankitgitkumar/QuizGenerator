@@ -58,7 +58,7 @@ function App() {
       <Route path="/student/practice-quiz/generate-quiz" element={<GenerateQuiz />} />
       <Route path="/student/practice-quiz/available-quizzes" element={<AvailableQuizzes />} />
       <Route path="/student/practice-quiz/history" element={<PreviousAttempts />} />
-      <Route path="/student/practice-quiz/attempt/:id" element={<PracticeQuizAttempt />} />
+      <Route path="/student/practice-quiz/attempt/:quizid" element={<PracticeQuizAttempt />} />
       <Route path="/student/practice-quiz/attempt/:id/review" element={<PracticeQuizReview />} />
 
 

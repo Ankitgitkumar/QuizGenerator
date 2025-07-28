@@ -16,7 +16,7 @@ const Dashboard = () => {
               if (!token) {
                 // If no token, redirect to login (or handle as unauthorized)
                 console.error("No teacher token found. Redirecting to login.");
-                navigate('/teacher/login');
+                navigate('/signin');
                 return;
             }
 

@@ -1,24 +1,54 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const GenerateQuiz = () => {
   const [topic, setTopic] = useState('');
   const [pdf, setPdf] = useState(null);
   const [quizGenerated, setQuizGenerated] = useState(false);
+   const [loading, setLoading] = useState(false);
+const navigate = useNavigate();
+   const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-  const handleGenerate = (e) => {
-    e.preventDefault();
+  const formData = new FormData();
+  formData.append("topic", topic);
+  if (pdf) formData.append("pdf", pdf);
 
-    if (!topic && !pdf) {
-      alert("Enter topic or upload PDF");
-      return;
-    }
+  const token = localStorage.getItem("studentToken");
 
-    // Simulate AI generation
-    setTimeout(() => {
-      setQuizGenerated(true);
-    }, 1000); // simulate delay
-  };
+  const res = await fetch("http://localhost:3141/api/v1/student/quizzes/create", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  const data = await res.json(); 
+
+  setLoading(false);
+
+  if (!res.ok) {
+    alert(data.error || "Something went wrong");
+    return;
+  }
+
+
+
+  alert("Quiz Created Successfully!");
+  navigate(`/student/practice-quiz/attempt/${data.quizId}`); 
+  setQuizGenerated(true);
+};
+
+ if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white">Creating Quiz...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen  px-6 py-10">
@@ -26,7 +56,7 @@ const GenerateQuiz = () => {
 
       {!quizGenerated ? (
         <form
-          onSubmit={handleGenerate}
+          onSubmit={handleSubmit}
           className="max-w-xl mx-auto bg-gray-800 p-6 rounded-xl shadow space-y-4"
         >
           <input

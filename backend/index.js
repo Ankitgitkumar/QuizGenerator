@@ -24,29 +24,27 @@ app.use(cors({
 }));
 
 
-import classroomRoute from './routes/classroom.js';
-import testRoute from './routes/test.js';
+
+
 
 app.use("/api/v1/teacher",teacherRoute)
 app.use("/api/v1/student",studentRoute)
-app.use("/api/v1/classroom",classroomRoute)
-app.use("/api/v1/test",testRoute)
+
+
 
 
 
 // Routes
 app.use("/api/v1/teacher", teacherRoute);
 app.use("/api/v1/student", studentRoute);
-app.use("/api/v1/teacher/signin", teacherRoute);
-app.use("/api/v1/student/signin", studentRoute);
-app.use("/api/v1/teacher/signup", teacherRoute);
-app.use("/api/v1/student/signup", studentRoute);
+
 app.use("/api/v1/teacher/quizzes", quizRoutes);
 
 // Optional test route
 app.get("/", (req, res) => {
   res.send("Quiz Generator API is running 🚀");
 });
+
 
 // MongoDB connection and server start
 async function main() {

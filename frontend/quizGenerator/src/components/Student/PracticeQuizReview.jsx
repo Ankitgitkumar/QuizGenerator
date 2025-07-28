@@ -1,103 +1,58 @@
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const PracticeQuizReview = () => {
+  const { quizid } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { questions, responses } = location.state || {};
+  const res = location.state;
 
-  if (!questions || !responses) {
-    return (
-      <div className="text-center mt-20 text-red-500">
-        No review data found. Please attempt a quiz first.
-      </div>
-    );
+  if (!res || !res.questions || !res.responses) {
+    navigate("/student/dashboard");
+    return null;
   }
 
-  const getStatus = (question) => {
-    const userAnswer = responses[question.id];
-    if (!userAnswer) return "unanswered";
-    return userAnswer.trim().toLowerCase() === question.answer.trim().toLowerCase()
-      ? "correct"
-      : "incorrect";
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "correct":
-        return "bg-green-100 text-green-800";
-      case "incorrect":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const getStatus = (q) => {
+    const userAns = res.responses[q._id];
+    if (q.type === "mcq") return userAns === q.correctAnswer ? "correct" : "wrong";
+    return userAns?.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase() ? "correct" : "wrong";
   };
 
   return (
-    <div className="min-h-screen  px-4 py-10">
-      <div className="max-w-4xl mx-auto bg-gray-800 p-6 rounded-xl shadow">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-200">
-          Quiz Review
-        </h2>
-
-        {questions.map((q, index) => {
-          const status = getStatus(q);
-          const userAnswer = responses[q.id];
-
-          return (
-            <div
-              key={q.id}
-              className={`mb-6 p-4 border rounded-md ${getStatusColor(status)}`}
-            >
-              <p className="font-semibold text-black mb-2">
-                Q{index + 1}. {q.question}
-              </p>
-
-              {q.type === "mcq" && (
-                <ul className="list-disc ml-6 mb-2 text-sm">
-                  {q.options.map((opt) => (
-                    <li
-                      key={opt}
-                      className={`${
-                        opt === q.answer
-                          ? "font-bold underline"
-                          : opt === userAnswer
-                          ? "italic"
-                          : ""
-                      }`}
-                    >
-                      {opt}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {q.type === "one-word" && (
-                <p className="text-sm">
-                  <strong>Correct Answer:</strong> {q.answer}
+    <div className="min-h-screen text-white bg-gray-900 px-4 py-6 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6 text-blue-400">📋 Review</h1>
+      <div className="space-y-8">
+        {res.questions.map((q, i) => (
+          <div key={q._id} className="bg-gray-800 p-6 rounded-xl shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">Q{i + 1}. {q.questionText}</h2>
+            {q.type === "mcq" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {q.options.map((opt) => {
+                  const isSelected = res.responses[q._id] === opt;
+                  const isCorrect = opt === q.correctAnswer;
+                  return (
+                    <div key={opt} className={`p-4 rounded-xl border ${isCorrect ? "border-green-600 bg-green-900" : isSelected ? "border-red-600 bg-red-900" : "border-gray-700 bg-gray-800"}`}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full text-center leading-8 font-bold bg-gray-700">{opt[0]}</div>
+                        <span>{opt}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div>
+                <p className={`p-3 rounded bg-gray-700 inline-block ${getStatus(q) === "correct" ? "text-green-400" : "text-red-400"}`}>
+                  Your answer: {res.responses[q._id] || "Not answered"}
                 </p>
-              )}
-
-              <p className="text-sm mt-1">
-                <strong>Your Answer:</strong>{" "}
-                {userAnswer ? userAnswer : <span className="italic">Not attempted</span>}
-              </p>
-              <p className="text-sm mt-1">
-                <strong>Status:</strong>{" "}
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </p>
-            </div>
-          );
-        })}
-
-        <div className="text-center mt-8">
-          <button
-            onClick={() => navigate("/student/practice-quiz")}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Back to Practice Quizzes
-          </button>
-        </div>
+              </div>
+            )}
+            {getStatus(q) === "wrong" && (
+              <p className="mt-3 text-sm text-yellow-400">Correct Answer: {q.correctAnswer}</p>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

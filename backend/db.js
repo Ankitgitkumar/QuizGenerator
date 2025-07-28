@@ -1,52 +1,36 @@
 
+import { response } from "express";
 import mongoose, { Schema } from "mongoose";
+import { type } from "os";
 
-<<<<<<< HEAD
 const { ObjectId } = mongoose.Types;
-=======
-const studentSchema=new Schema(
+
+const previousQuizSchema = new Schema({
+  studentId: { type:ObjectId, ref: "Student", required: true },
+  quizId: { type: ObjectId, ref: "Quiz", required: true },
+  responses: {
+    type: Map,
+    of: String, 
+    required: true,
+  },
+  questions: [
     {
-        email:{type:String,unique:true},
-        password:String,
-        firstName:String,
-        lastName:String,
-        classId:ObjectId
-    }
-)
+      questionText: { type: String, required: true },
+      type: { type: String, enum: ["mcq", "one-line"], required: true },
+      options: { type: [String], default: [] },
+      correctAnswer: { type: String, required: true },
+    },
+  ],
+  attemptedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-const teacherSchema=new Schema({
-    email:{type:String,unique:true},
-    password:String,
-    firstName:String,
-    lastName:String,
-})
-
-const classSchema =new Schema({
-    name:String,
-    creatorId:ObjectId,
-    students:[{ type: ObjectId, ref: 'Student' }],
-
-})
->>>>>>> f7b7c122fc0c616b74c22333f8d4368e5848870f
-
-const testSchema =new Schema({
-    title:String,
-    topic:String,
-    startTime: {
-        type: Date,
-        required: true,
-      },
-    endTime: {
-        type: Date,
-        required: true,
-      },
-    duration:Number,  //in minutes
-     classId:ObjectId,
-})
+   
 
 
 
-<<<<<<< HEAD
 // Student Schema
 
 const studentSchema = new Schema({
@@ -60,6 +44,7 @@ firstName: String,
 lastName: String,
 
 classId: { type: ObjectId, ref: "Classroom" },
+
 
 });
 
@@ -163,7 +148,7 @@ const questionModel = mongoose.model("Question", questionSchema);
 
 const classModel = mongoose.model("Classroom", classSchema);
 
-
+const previousQuizModel = mongoose.model("PreviousQuiz", previousQuizSchema);
 
 export default {
 
@@ -177,12 +162,6 @@ questionModel,
 
 classModel,
 
-};
-=======
-const studentModel =Mongoose.model("Student",studentSchema)
-const teacherModel = Mongoose.model("Teacher", teacherSchema);
-const classModel = Mongoose.model("Classroom", classSchema);
-const testModel = Mongoose.model("Test", testSchema);
+previousQuizModel
 
-export { studentModel, teacherModel, classModel, testModel };
->>>>>>> f7b7c122fc0c616b74c22333f8d4368e5848870f
+};

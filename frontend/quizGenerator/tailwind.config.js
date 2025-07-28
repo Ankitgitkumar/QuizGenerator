@@ -1,3 +1,6 @@
+const { formToJSON } = require('axios')
+const { fetchModule } = require('vite')
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: [
@@ -12,4 +15,3 @@ module.exports = {
     },
     plugins: [],
   }
-  

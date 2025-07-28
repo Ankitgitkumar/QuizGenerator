@@ -3,7 +3,7 @@ const JWT_STUDENT_PASSWORD="student_password_jwt"
 
 function studentMiddleware(req,res,next){
 
-    const token= req.headers.token;
+    const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
         return res.status(401).send("Unauthorized: Token missing");
@@ -12,7 +12,7 @@ function studentMiddleware(req,res,next){
     const decodedToken=jwt.verify(token,JWT_STUDENT_PASSWORD);
 
     if(decodedToken){
-        req.Id=decodedToken.studentId;
+        req.studentId=decodedToken.studentId;
         next();
     }
     else{

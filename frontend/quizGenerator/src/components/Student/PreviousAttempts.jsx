@@ -46,14 +46,9 @@ const PreviousAttempts = () => {
               <div className="flex gap-4">
                 <button
                   onClick={() =>
-                    navigate(`/student/practice-quiz/history/review/${index}`, {
-                      state: {
-                        questions: quiz.questions,
-                        responses: Object.fromEntries(
-                          quiz.questions.map((q) => [q._id, q.studentAnswer])
-                        ),
-                      },
-                    })
+                    navigate(`/student/practice-quiz/attempt/${12}/review`, {
+      state: { questions: quiz.questions, responses:quiz.responses,score:quiz.score },
+    })
                   }
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                 >

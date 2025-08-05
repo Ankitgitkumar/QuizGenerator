@@ -3,7 +3,7 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const PracticeQuizReview = () => {
-  const { quizid } = useParams();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const res = location.state;
@@ -19,10 +19,32 @@ const PracticeQuizReview = () => {
     return userAns?.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase() ? "correct" : "wrong";
   };
 
+  const  handleNext =async()=>{
+     const token = localStorage.getItem("studentToken");
+
+await axios.post(
+  "http://localhost:3141/api/v1/student/quizzes/submit",
+  {
+    responses:res.responses,
+    questions:res.questions,
+    score:res.score,
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  }
+);
+
+
+    navigate("/student/dashboard");
+  }
+
   return (
     <div className="min-h-screen text-white bg-gray-900 px-4 py-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-blue-400">📋 Review</h1>
-      <div className="space-y-8">
+      <div className="p-4 my-5 text-4xl text-green-400 text-center font-bold">{res.score}/10</div>
+      <div className="space-y-8 ">
         {res.questions.map((q, i) => (
           <div key={q._id} className="bg-gray-800 p-6 rounded-xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4">Q{i + 1}. {q.questionText}</h2>
@@ -53,6 +75,9 @@ const PracticeQuizReview = () => {
             )}
           </div>
         ))}
+      </div>
+      <div className="flex  justify-center">
+        <button  onClick={handleNext} className="bg-blue-600 hover:cursor-pointer p-2 mt-10  rounded-lg font-bold" >Back to Dashboard</button>
       </div>
     </div>
   );

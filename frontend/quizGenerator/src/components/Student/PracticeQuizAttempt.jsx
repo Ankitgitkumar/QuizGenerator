@@ -14,6 +14,7 @@ const PracticeQuizAttempt = () => {
   const [tabSwitches, setTabSwitches] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
   const [blocked, setBlocked] = useState(false);
+const [score, setScore] = useState(0);
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -79,22 +80,36 @@ const PracticeQuizAttempt = () => {
   const formatTime = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-  const handleChange = (qid, value) => {
-    setResponses((prev) => ({ ...prev, [qid]: value }));
-  };
+const handleChange = (qid, value) => {
+  setResponses((prev) => ({ ...prev, [qid]: value }));
+
+  const currentQuestion = questions.find((q) => q._id === qid);
+  if (!currentQuestion) return;
+
+  const correct = currentQuestion.correctAnswer;
+  const isMCQ = currentQuestion.type === "mcq";
+  const isCorrect = isMCQ
+    ? value === correct
+    : value.trim().toLowerCase() === correct.trim().toLowerCase();
+
+  // Check previous response correctness
+  const prevAnswer = responses[qid];
+  const wasPreviouslyCorrect = isMCQ
+    ? prevAnswer === correct
+    : prevAnswer?.trim().toLowerCase() === correct.trim().toLowerCase();
+
+  if (!wasPreviouslyCorrect && isCorrect) {
+    setScore((prev) => prev + 1);
+  } else if (wasPreviouslyCorrect && !isCorrect) {
+    setScore((prev) => prev - 1);
+  }
+};
+
 
   const handleSubmit = () => {
-    axios.post(
-      "http://localhost:3141/api/v1/student/quizzes/submit",
-      { questions, responses },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("studentToken")}`,
-        },
-      }
-    )
+   
     navigate(`/student/practice-quiz/attempt/${quizid}/review`, {
-      state: { questions, responses },
+      state: { questions, responses,score },
     });
   };
 

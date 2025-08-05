@@ -197,38 +197,30 @@ route.post("/quizzes/attempt",studentMiddleware, async(req, res)=>{
 
 route.post("/quizzes/submit", studentMiddleware, async (req, res) => {
     try {
-        const { responses, questions } = req.body;
+        console.log("Submitting quiz with body:", req.body);
+        const { responses, questions,score } = req.body;
         const studentId = req.studentId;
 
-        let score = 0;
-        const formattedQuestions = [];
-
-        for (let q of questions) {
-            const isCorrect = (q.type === "mcq")
-                ? responses[q._id] === q.correctAnswer
-                : (responses[q._id]?.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase());
-
-            if (isCorrect) score++;
-
-            formattedQuestions.push({
-                questionText: q.questionText,
-                type: q.type,
-                options: q.options,
-                correctAnswer: q.correctAnswer,
-                studentAnswer: responses[q._id] || ""
-            });
+       if(!studentId || !responses || !questions || !score) {
+        console.log("Missing fields")
+            return res.status(400).json({ error: "Missing required fields" });
         }
+       
+
 
         // Save to PreviousQuiz
         await PreviousQuiz.create({
             studentId,
-            questions: formattedQuestions,
+             questions,
+             responses,
             score,
             attemptedAt: new Date()
         });
 
         // Delete quiz from quizModel
-        await quizModel.findByIdAndDelete(req.body.quizId);
+        
+
+     
 
         res.status(200).json({ message: "Quiz submitted", score });
     } catch (e) {

@@ -49,7 +49,7 @@ app.get("/", (req, res) => {
 // MongoDB connection and server start
 async function main() {
   try {
-    await mongoose.connect("mongodb+srv://quizforgeai:aiquizgenerator24@quizai.xhijqdh.mongodb.net/quizforge");
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");
 
     app.listen(3141, () => {

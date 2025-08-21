@@ -8,7 +8,7 @@ import {getTeacherProfile} from "../controllers/teacherController.js";
 import express from "express";
 
 const route = express.Router();
-const JWT_TEACHER_PASSWORD = "teacher_password_jwt";
+
 import {
   createQuiz,
   getMyQuizzes,
@@ -58,7 +58,7 @@ route.post('/signin', async (req,res)=> {
             {
                 teacherId:teacher._id,
              
-            },JWT_TEACHER_PASSWORD
+            },process.env.JWT_TEACHER_PASSWORD
         )
 
         res.status(200).json({ message: "Teacher signed in", token });

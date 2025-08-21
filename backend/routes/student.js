@@ -12,7 +12,6 @@ const PreviousQuiz = models.previousQuizModel;
 import express from "express"
 import studentMiddleware from "../middlewares/student.js";
 const route = express.Router();
-const JWT_STUDENT_PASSWORD="student_password_jwt"
 
 route.post("/signup",async (req,res)=> {
     try{
@@ -33,7 +32,7 @@ catch(e){
     res.send("Error signing up user: " + e.message);
 }
 })
-
+ 
 route.post('/signin', async (req,res)=> {
     try {
         const {email,password}=req.body;
@@ -49,7 +48,7 @@ route.post('/signin', async (req,res)=> {
             {
                 studentId:student._id,
              
-            },JWT_STUDENT_PASSWORD
+            },process.env.JWT_STUDENT_PASSWORD
         )
 
         res.status(200).json({ message: "Student signed in", token });

@@ -10,7 +10,7 @@ function teacherMiddleware(req, res, next) {
   }
 
   try {
-    const decodedToken = jwt.verify(token, JWT_TEACHER_PASSWORD);
+    const decodedToken = jwt.verify(token, process.env.JWT_TEACHER_PASSWORD);
     req.teacherId = decodedToken.teacherId; 
     next();
   } catch (error) {

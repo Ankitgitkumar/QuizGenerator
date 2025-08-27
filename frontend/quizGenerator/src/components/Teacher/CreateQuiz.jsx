@@ -29,7 +29,7 @@ const CreateQuiz = () => {
 
   const token = localStorage.getItem("teacherToken"); // Get token from localStorage
 
-  const res = await fetch("http://localhost:3141/api/v1/teacher/quizzes/create", {
+  const res = await fetch("https://quiz-generator-livid.vercel.app/api/v1/teacher/quizzes/create", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

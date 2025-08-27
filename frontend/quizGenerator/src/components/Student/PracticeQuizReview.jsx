@@ -23,7 +23,7 @@ const PracticeQuizReview = () => {
      const token = localStorage.getItem("studentToken");
 
 await axios.post(
-  "http://localhost:3141/api/v1/student/quizzes/submit",
+  "https://quiz-generator-livid.vercel.app/api/v1/student/quizzes/submit",
   {
     responses:res.responses,
     questions:res.questions,

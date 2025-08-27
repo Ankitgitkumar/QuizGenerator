@@ -29,7 +29,7 @@ const MyQuizzes = () => {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`http://localhost:3141/api/v1/teacher/quiz/${id}`, {
+      await axios.delete(`https://quiz-generator-livid.vercel.app/api/v1/teacher/quiz/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

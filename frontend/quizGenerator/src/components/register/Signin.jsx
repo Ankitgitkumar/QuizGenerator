@@ -25,7 +25,7 @@ function Signin() {
               password: password,
             };
             try {
-              const res = await axios.post("http://localhost:3141/api/v1/teacher/signin", teacher);
+              const res = await axios.post("https://quiz-generator-livid.vercel.app/api/v1/teacher/signin", teacher);
               console.log("Teacher Signin Success:", res.data);
               localStorage.setItem("teacherToken", res.data.token);
               navigate("/teacher/dashboard");
@@ -39,7 +39,7 @@ function Signin() {
               password: password,
             };
             try {
-              const res = await axios.post("http://localhost:3141/api/v1/student/signin", student);
+              const res = await axios.post("https://quiz-generator-livid.vercel.app/api/v1/student/signin", student);
               console.log("Student Signin Success:", res);
               localStorage.setItem("studentToken", res.data.token);
               navigate("/student/dashboard");

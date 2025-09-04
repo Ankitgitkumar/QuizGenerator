@@ -10,7 +10,7 @@ const PreviousAttempts = () => {
     const fetchAttempts = async () => {
       try {
         const token = localStorage.getItem("studentToken");
-        const res = await axios.get("https://quiz-generator-livid.vercel.app/api/v1/student/quizzes/previous", {
+        const res = await axios.get("http://localhost:3141/api/v1/student/quizzes/previous", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAttemptedQuizzes(res.data);

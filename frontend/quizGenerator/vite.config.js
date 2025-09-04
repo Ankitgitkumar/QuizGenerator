@@ -18,7 +18,7 @@ export default defineConfig({
     // This is the crucial part for proxying API requests to your backend
     proxy: {
       '/api': { // This will match any request path that starts with '/api'
-        target: 'https://quiz-generator-livid.vercel.app', // Your backend server's address
+        target: 'https://quiz-generator-znsi.vercel.app', // Your backend server's address
         changeOrigin: true, // Needed for proper host header handling in many proxy scenarios
         // If your backend routes also include '/api' (e.g., /api/v1/teacher/quizzes)
         // then you typically DON'T need a rewrite rule. The entire '/api' prefix

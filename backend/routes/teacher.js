@@ -69,7 +69,7 @@ route.post('/signin', async (req,res)=> {
 })
 
 
-// route.get("/me",teacherMiddleware, getTeacherProfile);
+route.get("/me",teacherMiddleware, getTeacherProfile);
 
 route.post("/create", teacherMiddleware, upload.single("pdf"), createQuiz);
 route.get("/quizzes", teacherMiddleware, getMyQuizzes);

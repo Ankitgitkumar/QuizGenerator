@@ -7,7 +7,7 @@ const AvailableQuizzes = () => {
   const token = localStorage.getItem("studentToken");
 
   useEffect(()=>{
-    const res=axios.get("http://localhost:3141/api/v1/student/quizzes/available", {
+    const res=axios.get("https://quiz-generator-znsi.vercel.app/api/v1/student/quizzes/available", {
       headers: {
         Authorization: `Bearer ${token}`,
       },

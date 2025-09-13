@@ -23,7 +23,7 @@ const PracticeQuizReview = () => {
      const token = localStorage.getItem("studentToken");
 
 await axios.post(
-  "http://localhost:3141/api/v1/student/quizzes/submit",
+  "https://quiz-generator-znsi.vercel.app/api/v1/student/quizzes/submit",
   {
     responses:res.responses,
     questions:res.questions,
@@ -77,7 +77,7 @@ await axios.post(
         ))}
       </div>
       <div className="flex  justify-center">
-        <button  onClick={handleNext} className="bg-blue-600 hover:cursor-pointer p-2 mt-10  rounded-lg font-bold" >Back to Dashboard</button>
+        <button  onClick={() => navigate("/student/practice-quiz")} className="bg-blue-600 hover:cursor-pointer p-2 mt-10  rounded-lg font-bold" >Back to Dashboard</button>
       </div>
     </div>
   );

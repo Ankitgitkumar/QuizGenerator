@@ -2,7 +2,7 @@ import React from 'react'
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+export const API_BASE_URL = "https://quiz-generator-znsi.vercel.app/api/v1";
 function Signin() {
       const [email, setemail] = useState("");
       const [password, setpassword] = useState("");
@@ -25,7 +25,7 @@ function Signin() {
               password: password,
             };
             try {
-              const res = await axios.post("https://quiz-generator-znsi.vercel.app/api/v1/teacher/signin", teacher);
+              const res = await axios.post(`${API_BASE_URL}/teacher/signin`, teacher);
               console.log("Teacher Signin Success:", res.data);
               localStorage.setItem("teacherToken", res.data.token);
               navigate("/teacher/dashboard");
@@ -39,7 +39,7 @@ function Signin() {
               password: password,
             };
             try {
-              const res = await axios.post("https://quiz-generator-znsi.vercel.app/api/v1/student/signin", student);
+              const res = await axios.post(`${API_BASE_URL}/student/signin`, student);
               console.log("Student Signin Success:", res.data);
               localStorage.setItem("studentToken", res.data.token);
               navigate("/student/dashboard");

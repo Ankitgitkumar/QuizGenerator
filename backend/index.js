@@ -25,16 +25,6 @@ app.use(cors({
 }));
 
 
-
-
-
-app.use("/api/v1/teacher",teacherRoute)
-app.use("/api/v1/student",studentRoute)
-
-
-
-
-
 // Routes
 app.use("/api/v1/teacher", teacherRoute);
 app.use("/api/v1/student", studentRoute);

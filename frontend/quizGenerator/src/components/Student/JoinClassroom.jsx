@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+
+
+
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const JoinClassroom = () => {
-  
   const navigate = useNavigate();
   const classrooms = [
     { id: 'abc123', name: 'Math by Mr. Sharma' },
@@ -28,6 +30,7 @@ const JoinClassroom = () => {
         <form onSubmit={handleJoin} className="space-y-4">
           <input
             type="text"
+            name="classroomCode"
             placeholder="Enter Classroom Code"
             required
             className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"

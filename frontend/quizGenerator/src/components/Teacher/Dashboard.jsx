@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from 'react'; 
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; 
+import CreateClassroom from "../Classroom/CreateClassroom";
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [teacherName, setTeacherName] = useState('Teacher'); 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [teacherId, setTeacherId] = useState(null);
+    const [showClassroomForm, setShowClassroomForm] = useState(false);
 
     useEffect(() => {
         const fetchTeacherProfile = async () => {
@@ -29,6 +32,7 @@ const Dashboard = () => {
                 });
 
                 setTeacherName(`${response.data.firstName} ${response.data.lastName}`);
+                setTeacherId(response.data._id);
                 setLoading(false);
 
             } catch (err) {
@@ -73,7 +77,17 @@ const Dashboard = () => {
                     Welcome, {teacherName} 👋
                 </h1>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 z-10 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 z-10 gap-6">
+                    {/* Classroom Card */}
+                    <div className="bg-gray-800 rounded-2xl shadow p-6 hover:shadow-md transition duration-300 cursor-pointer" onClick={() => setShowClassroomForm(true)}>
+                        <h2 className="text-xl font-semibold text-gray-300 mb-2">Create Classroom</h2>
+                        <p className="text-gray-400 mb-4">
+                            Set up a new classroom and get a join code for your students.
+                        </p>
+                        <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded">
+                            Create Classroom
+                        </button>
+                    </div>
 
                   
                     <div className="bg-gray-800 rounded-2xl shadow p-6 hover:shadow-md transition duration-300">
@@ -111,9 +125,25 @@ const Dashboard = () => {
                     </div>
 
                 </div>
-            </div>
-        </div>
-    );
+                                                {/* Classroom Creation Modal/Card */}
+                                                {showClassroomForm && (
+                                                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                                        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+                                                            <button
+                                                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
+                                                                onClick={() => setShowClassroomForm(false)}
+                                                                aria-label="Close"
+                                                            >
+                                                                &times;
+                                                            </button>
+                                                            <h2 className="text-2xl font-bold mb-4 text-gray-800">Create a Classroom</h2>
+                                                            {teacherId && <CreateClassroom teacherId={teacherId} onCreated={() => setShowClassroomForm(false)} />}
+                                                        </div>
+                                                    </div>
+                                                )}
+                        </div>
+                </div>
+        );
 };
 
 export default Dashboard;

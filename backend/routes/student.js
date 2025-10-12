@@ -15,22 +15,20 @@ const route = express.Router();
 
 route.post("/signup",async (req,res)=> {
     try{
-    const {email,password,firstName,lastName}=req.body;
-    
-    const hashedPassword= await bcrypt.hash(password,10);
-
-   await studentModel.create({
-        email,
-        password:hashedPassword,
-        firstName,
-        lastName,
-    })
-
-    res.send("Student signed up");
-}
-catch(e){
-    res.send("Error signing up user: " + e.message);
-}
+        const {email,password,firstName,lastName}=req.body;
+        const hashedPassword= await bcrypt.hash(password,10);
+        const student = await studentModel.create({
+            email,
+            password:hashedPassword,
+            firstName,
+            lastName,
+        });
+        // Optionally, create a JWT token here if you want auto-login after signup
+        res.status(201).json({ message: "Student signed up", student });
+    }
+    catch(e){
+        res.status(500).send("Error signing up user: " + e.message);
+    }
 })
  
 route.post('/signin', async (req,res)=> {
@@ -47,11 +45,9 @@ route.post('/signin', async (req,res)=> {
         const token=jwt.sign(
             {
                 studentId:student._id,
-             
             },process.env.JWT_STUDENT_PASSWORD
-        )
-
-        res.status(200).json({ message: "Student signed in", token });
+        );
+        res.status(200).json({ message: "Student signed in", token, student });
 
     } catch (error) {
         res.status(500).send("Error signing in user: " + error.message);

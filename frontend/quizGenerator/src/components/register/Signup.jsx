@@ -15,8 +15,8 @@ function Signup() {
   async function submitHandler(e) {
     e.preventDefault(); // important if inside form
 
-    console.log("Submit button clicked");
-    console.log("Form values:", fN, lN, email, password, role);
+  console.log("Submit button clicked");
+  console.log("Form values:", fN, lN, email, role); // Do not log password
 
     if (fN.length > 0 && lN.length > 0 && email.length > 0 && password.length > 0) {
         console.log("Selected Role:", role);
@@ -38,8 +38,8 @@ function Signup() {
         }
       } else if (role === "student") {
         const student = {
-            firstName: fN,
-            lastName: lN,
+          firstName: fN,
+          lastName: lN,
           email: email,
           password: password,
         };
@@ -51,7 +51,6 @@ function Signup() {
         } catch (error) {
           console.log("Student Signup Error:", error.response?.data || error.message);
         }
-      
       }
     } else {
       console.log("Please fill all fields.");

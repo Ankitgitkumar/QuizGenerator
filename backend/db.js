@@ -128,11 +128,9 @@ duration: Number, // in minutes
 // Class Schema
 
 const classSchema = new Schema({
-
-name: { type: String, required: true },
-
-creatorId: { type: ObjectId, ref: "Teacher", required: true },
-
+  name: { type: String, required: true },
+  code: { type: String, required: true, unique: true },
+  teacher: { type: ObjectId, ref: "Teacher", required: true },
 });
 
 

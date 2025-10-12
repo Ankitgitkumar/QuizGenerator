@@ -4,11 +4,13 @@ import cors from 'cors';
 import path from "path";
 import dotenv from "dotenv";
 
+
 // Import routes
 import teacherRoute from './routes/teacher.js';
 import studentRoute from './routes/student.js';
 
-import quizRoutes from './routes/teacher.js'; 
+import quizRoutes from './routes/teacher.js';
+import classroomRoute from './routes/classroom.js'; 
 
 dotenv.config();
 
@@ -31,6 +33,7 @@ app.use("/api/v1/student", studentRoute);
 
 app.use("/api/v1/teacher/quizzes", quizRoutes);
 
+app.use('/api/classroom', classroomRoute);
 // Optional test route
 app.get("/", (req, res) => {
   res.send("Quiz Generator API is running 🚀");

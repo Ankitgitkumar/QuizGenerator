@@ -1,12 +1,11 @@
 
 
 import models from '../db.js';
-const Teacher = models.teacherModel; 
 
+const Teacher = models.teacherModel; 
 
 export const getTeacherProfile = async (req, res) => {
     try {
-        
         if (!req.teacherId) {
             return res.status(401).json({ message: 'Not authenticated as a teacher.' });
         }

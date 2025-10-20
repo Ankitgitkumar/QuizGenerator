@@ -23,7 +23,7 @@ const PracticeQuizReview = () => {
      const token = localStorage.getItem("studentToken");
 
 await axios.post(
-  "https://quiz-generator-znsi.vercel.app/api/v1/student/quizzes/submit",
+  "http://localhost:3141/api/v1/student/quizzes/submit",
   {
     responses:res.responses,
     questions:res.questions,

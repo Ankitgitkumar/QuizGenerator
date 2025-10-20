@@ -11,7 +11,7 @@ const MyQuizzes = () => {
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        const res = await axios.get('https://quiz-generator-znsi.vercel.app/api/v1/teacher/quizzes', {
+        const res = await axios.get('http://localhost:3141/api/v1/teacher/quizzes', {
           headers: {
             Authorization: `Bearer ${token}`
           }

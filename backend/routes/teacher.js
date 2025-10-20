@@ -54,14 +54,20 @@ route.post('/signin', async (req,res)=> {
         if(!isPasswordCorrect){
             return res.status(401).send("Incorrect Password");
         }
-        const token=jwt.sign(
-            {
-                teacherId:teacher._id,
-             
-            },process.env.JWT_TEACHER_PASSWORD
-        )
+        const token = jwt.sign(
+            { teacherId: teacher._id.toString() },
+            process.env.JWT_TEACHER_PASSWORD
+        );
 
-        res.status(200).json({ message: "Teacher signed in", token });
+        // Return a small teacher object along with the token to avoid immediate /me call from the client
+        const teacherData = {
+            _id: teacher._id,
+            firstName: teacher.firstName,
+            lastName: teacher.lastName,
+            email: teacher.email,
+        };
+
+        res.status(200).json({ message: "Teacher signed in", token, teacher: teacherData });
 
     } catch (error) {
         res.status(500).send("Error signing in user: " + error.message);

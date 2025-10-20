@@ -21,7 +21,7 @@ const [score, setScore] = useState(0);
       try {
         const token = localStorage.getItem("studentToken");
         const res = await axios.post(
-          "https://quiz-generator-znsi.vercel.app/api/v1/student/quizzes/attempt",
+          "http://localhost:3141/api/v1/student/quizzes/attempt",
           { quizId: quizid },
           {
             headers: {

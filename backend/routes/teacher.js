@@ -36,7 +36,17 @@ route.post("/signup", async (req, res) => {
         lastName,
     })
 
-    res.send("teacher signed up");
+    // Fetch the newly created teacher so we can return a token and basic profile
+    const teacher = await teacherModel.findOne({ email });
+    const token = jwt.sign({ teacherId: teacher._id.toString() }, process.env.JWT_TEACHER_PASSWORD);
+    const teacherData = {
+      _id: teacher._id,
+      firstName: teacher.firstName,
+      lastName: teacher.lastName,
+      email: teacher.email,
+    };
+
+    res.status(201).json({ message: 'Teacher signed up', token, teacher: teacherData });
 }
 catch(e){
     res.send("Error signing up user: " + e.message);

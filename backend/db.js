@@ -7,7 +7,7 @@ const { ObjectId } = mongoose.Types;
 
 const previousQuizSchema = new Schema({
   studentId: { type:ObjectId, ref: "Student", required: true },
-  quizId: { type: ObjectId, ref: "Quiz"},
+  quizId: { type: ObjectId, ref: "Quiz", required: true },
   responses: {
     type: Map,
     of: String, 
@@ -131,6 +131,8 @@ const classSchema = new Schema({
   name: { type: String, required: true },
   code: { type: String, required: true, unique: true },
   teacher: { type: ObjectId, ref: "Teacher", required: true },
+  quizzes: [{ type: ObjectId, ref: "Quiz" }],
+  students: [{ type: ObjectId, ref: "Student" }],
 });
 
 

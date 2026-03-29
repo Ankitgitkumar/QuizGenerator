@@ -13,6 +13,7 @@ import {
   createQuiz,
   getMyQuizzes,
   getQuizById,
+  getQuizResults,
   scheduleQuiz,
   editQuiz,
   deleteQuiz,
@@ -94,6 +95,9 @@ route.patch("/quiz/:id/schedule", teacherMiddleware, scheduleQuiz); // Schedule 
 route.patch("/quiz/:id", teacherMiddleware, editQuiz);              // Edit quiz
 route.delete("/quiz/:id", teacherMiddleware, deleteQuiz);  // Delete quiz
 route.patch("/question/:id",teacherMiddleware, updateQuestion);
+
+route.get("/quiz/:id/results", teacherMiddleware, getQuizResults);
+
 //Keep dynamic :id route at the bottom
 route.get("/:id", teacherMiddleware, getQuizById);
 

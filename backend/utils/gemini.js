@@ -60,6 +60,15 @@ export const generateQuizFromText = async (text, numberOfQuestions = 5) => {
 
   } catch (e) {
     console.error("Error in generateQuizFromText:", e);
+
+    const statusCode = e?.response?.status || e?.status || (e?.message && e.message.match(/\b(\d{3})\b/)?.[1]);
+
+    if (statusCode === 403) {
+      throw new Error(
+        "AI key error: access forbidden (403). Your API key may have been revoked or leaked. Create a new Gemini API key and set GEMINI_API_KEY in your .env file."
+      );
+    }
+
     if (e instanceof SyntaxError) {
       throw new Error(`Failed to parse AI response as JSON. Check AI output for formatting issues. Raw content (after cleaning attempt): "${textResponse}"`);
     } else {

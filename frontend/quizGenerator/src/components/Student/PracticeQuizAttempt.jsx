@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-const PracticeQuizAttempt = () => {
+const QuizAttempt = () => {
   const { quizid } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // pass this from previous page:
+  // navigate(`/student/quiz/attempt/${id}`, { state: { type: "practice" } })
+  // navigate(`/student/quiz/attempt/${id}`, { state: { type: "classroom" } })
+  const quizType = location.state?.type || "classroom";
 
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,14 +20,20 @@ const PracticeQuizAttempt = () => {
   const [tabSwitches, setTabSwitches] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
   const [blocked, setBlocked] = useState(false);
-const [score, setScore] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
         const token = localStorage.getItem("studentToken");
+
+        const url =
+          quizType === "practice"
+            ? "http://localhost:3141/api/v1/student/quizzes/practice/attempt"
+            : "http://localhost:3141/api/v1/student/quizzes/attempt";
+
         const res = await axios.post(
-          "http://localhost:3141/api/v1/student/quizzes/attempt",
+          url,
           { quizId: quizid },
           {
             headers: {
@@ -29,19 +41,23 @@ const [score, setScore] = useState(0);
             },
           }
         );
+
         setQuestions(res.data.Questions || []);
-        setLoading(false);
       } catch (err) {
-        console.error(err);
-        alert("Failed to load quiz.");
+        console.error("Fetch quiz error:", err.response?.data || err.message);
+        alert(err.response?.data?.error || err.response?.data || "Failed to load quiz.");
         navigate("/student/dashboard");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchQuiz();
-  }, [quizid, navigate]);
+  }, [quizid, quizType, navigate]);
 
   useEffect(() => {
+    if (loading || questions.length === 0) return;
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -52,8 +68,9 @@ const [score, setScore] = useState(0);
         return prev - 1;
       });
     }, 1000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [loading, questions.length]);
 
   useEffect(() => {
     const handleVisibility = () => {
@@ -80,41 +97,55 @@ const [score, setScore] = useState(0);
   const formatTime = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-const handleChange = (qid, value) => {
-  setResponses((prev) => ({ ...prev, [qid]: value }));
+  const handleChange = (qid, value) => {
+    setResponses((prev) => ({ ...prev, [qid]: value }));
+  };
 
-  const currentQuestion = questions.find((q) => q._id === qid);
-  if (!currentQuestion) return;
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
 
-  const correct = currentQuestion.correctAnswer;
-  const isMCQ = currentQuestion.type === "mcq";
-  const isCorrect = isMCQ
-    ? value === correct
-    : value.trim().toLowerCase() === correct.trim().toLowerCase();
+    try {
+      const token = localStorage.getItem("studentToken");
 
-  // Check previous response correctness
-  const prevAnswer = responses[qid];
-  const wasPreviouslyCorrect = isMCQ
-    ? prevAnswer === correct
-    : prevAnswer?.trim().toLowerCase() === correct.trim().toLowerCase();
+      const res = await axios.post(
+        "http://localhost:3141/api/v1/student/quizzes/submit",
+        {
+          quizId: quizid,
+          responses,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  if (!wasPreviouslyCorrect && isCorrect) {
-    setScore((prev) => prev + 1);
-  } else if (wasPreviouslyCorrect && !isCorrect) {
-    setScore((prev) => prev - 1);
-  }
-};
+      const { score, total } = res.data || {};
 
-
-  const handleSubmit = () => {
-   
-    navigate(`/student/practice-quiz/attempt/${quizid}/review`, {
-      state: { questions, responses,score },
-    });
+      navigate(`/student/quiz/attempt/${quizid}/review`, {
+        state: {
+          questions,
+          responses,
+          score,
+          total,
+          type: quizType,
+        },
+      });
+    } catch (err) {
+      console.error("Submit quiz error:", err.response?.data || err.message);
+      alert(err.response?.data?.error || "Failed to submit quiz. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
     return <div className="text-white text-center mt-10">Loading quiz...</div>;
+  }
+
+  if (!questions.length) {
+    return <div className="text-white text-center mt-10">No questions found.</div>;
   }
 
   const q = questions[current];
@@ -123,17 +154,28 @@ const handleChange = (qid, value) => {
     <div className="relative">
       <div className={`min-h-screen text-white flex flex-col ${blocked ? "blur-sm pointer-events-none" : ""}`}>
         <div className="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-md sticky top-0 z-10">
-          <h1 className="text-xl font-bold text-blue-400">📘 quiz</h1>
-          <span className="bg-blue-700 px-4 py-1 rounded-full text-sm font-mono">{formatTime(timeLeft)}</span>
+          <h1 className="text-xl font-bold text-blue-400">
+            {quizType === "practice" ? "📘 Practice Quiz" : "🏫 Classroom Quiz"}
+          </h1>
+          <span className="bg-blue-700 px-4 py-1 rounded-full text-sm font-mono">
+            {formatTime(timeLeft)}
+          </span>
         </div>
 
         <div className="flex-1 flex flex-col justify-center px-6 max-w-5xl mx-auto w-full">
-          <h2 className="text-xl font-semibold mb-4">Q{current + 1}. {q.questionText}</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            Q{current + 1}. {q.questionText}
+          </h2>
 
           {q.type === "mcq" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {q.options.map((opt) => (
-                <label key={opt} className={`p-4 rounded-xl bg-gray-800 border border-gray-700 cursor-pointer ${responses[q._id] === opt ? "ring-2 ring-blue-400" : ""}`}>
+                <label
+                  key={opt}
+                  className={`p-4 rounded-xl bg-gray-800 border border-gray-700 cursor-pointer ${
+                    responses[q._id] === opt ? "ring-2 ring-blue-400" : ""
+                  }`}
+                >
                   <input
                     type="radio"
                     name={`q-${q._id}`}
@@ -143,7 +185,9 @@ const handleChange = (qid, value) => {
                     className="hidden"
                   />
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-700 rounded-full text-center leading-8 font-bold text-white">{opt[0]}</div>
+                    <div className="w-8 h-8 bg-blue-700 rounded-full text-center leading-8 font-bold text-white">
+                      {opt[0]}
+                    </div>
                     <span>{opt}</span>
                   </div>
                 </label>
@@ -168,6 +212,7 @@ const handleChange = (qid, value) => {
           >
             ⬅️ Previous
           </button>
+
           {current < questions.length - 1 ? (
             <button
               onClick={() => setCurrent((prev) => prev + 1)}
@@ -178,9 +223,12 @@ const handleChange = (qid, value) => {
           ) : (
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+              disabled={submitting}
+              className={`px-4 py-2 rounded text-white ${
+                submitting ? "bg-gray-500 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+              }`}
             >
-               Submit Quiz
+              {submitting ? "Submitting..." : "Submit Quiz"}
             </button>
           )}
         </div>
@@ -202,4 +250,4 @@ const handleChange = (qid, value) => {
   );
 };
 
-export default PracticeQuizAttempt;
+export default QuizAttempt;

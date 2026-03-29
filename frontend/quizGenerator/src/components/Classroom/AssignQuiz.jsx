@@ -13,7 +13,7 @@ const AssignQuiz = ({ classroomId, quizzes, onAssigned }) => {
     setError("");
     setSuccess("");
     try {
-  await axios.post("http://localhost:3141/api/classroom/assign-quiz", { classroomId, quizId: selectedQuiz });
+      await axios.post("/api/v1/classroom/assign-quiz", { classroomId, quizId: selectedQuiz });
       setSuccess("Quiz assigned!");
       if (onAssigned) onAssigned(selectedQuiz);
     } catch (err) {

@@ -5,6 +5,7 @@ import models from "../db.js";
 
 const Quiz = models.quizModel;
 const Question = models.questionModel;
+const PreviousQuiz = models.previousQuizModel;
 
 
 import { generateQuizFromText } from "../utils/gemini.js";
@@ -117,6 +118,20 @@ export const getQuizById = async (req, res) => {
   } catch (err) {
     console.error("Error fetching quiz by ID:", err);
     res.status(500).json({ error: "Error fetching quiz" });
+  }
+};
+
+// Get all submissions for a quiz (teacher view)
+export const getQuizResults = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const results = await PreviousQuiz.find({ quizId: id }).populate("studentId", "firstName lastName email");
+
+    res.status(200).json({ quizId: id, results });
+  } catch (err) {
+    console.error("Error fetching quiz results:", err);
+    res.status(500).json({ error: "Failed to fetch quiz results" });
   }
 };
 

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import models from "../db.js";
 const studentModel = models.studentModel;
 const quizModel = models.quizModel;
+const classModel = models.classModel;
 const Question = models.questionModel;
 import { generateQuizFromText } from "../utils/gemini.js";
 import upload from "../middlewares/multer.js";
@@ -148,68 +149,179 @@ route.post("/quizzes/create",studentMiddleware, upload.single("pdf"), async(req,
 
 });
 
-route.post("/quizzes/attempt",studentMiddleware, async(req, res)=>{
-  const { quizId } = req.body;
+route.post("/quizzes/attempt", studentMiddleware, async (req, res) => {
+	try {
+		const { quizId } = req.body;
 
-        
-        const quiz =await quizModel.findById(quizId)
-        if (!quiz) {
-            return res.status(404).send("Quiz not found");
-        }
-       let Questions = [];
+		// Ensure the quiz is assigned to this student's classroom
+		const student = await studentModel.findById(req.studentId);
+		if (!student || !student.classId) {
+			return res.status(403).send("Student not in a classroom");
+		}
 
-        for(let questionId of quiz.questions){
-            let question = await Question.findById(questionId);
-            if (!question) {
-                return res.status(404).send(`Question with ID ${questionId} not found`);
-            }
-            Questions.push({
-                _id: question._id,
-                questionText: question.questionText,
-                type: question.type,
-                options: question.options,
-                correctAnswer: question.correctAnswer
-            })
-        }
-        res.status(200).json({
-            Questions
-        });
-    })
+		const classroom = await classModel.findById(student.classId);
+		if (!classroom || !classroom.quizzes?.some((id) => id.toString() === quizId)) {
+			return res.status(403).send("Quiz not assigned to your classroom");
+		}
 
-   route.get("/quizzes/available",studentMiddleware,async (req, res) => {
-            try {
-                const quizzes = await quizModel.find({createdBy: req.studentId})
-                if (!quizzes || quizzes.length === 0) {
-                    return res.status(404).send("No quizzes available");
-                }
-                res.status(200).json(quizzes);
-            } catch (error) {   
-                res.status(500).send("Error fetching quizzes: " + error.message);
-            }
-    })
+		const quiz = await quizModel.findById(quizId);
+		if (!quiz) {
+			return res.status(404).send("Quiz not found");
+		}
+
+		const now = new Date();
+		if (!quiz.isScheduled || !quiz.scheduleAt || new Date(quiz.scheduleAt) > now) {
+			return res.status(403).send("Quiz is not yet available");
+		}
+
+		const Questions = [];
+		for (let questionId of quiz.questions) {
+			let question = await Question.findById(questionId);
+			if (!question) {
+				return res.status(404).send(`Question with ID ${questionId} not found`);
+			}
+			Questions.push({
+				_id: question._id,
+				questionText: question.questionText,
+				type: question.type,
+				options: question.options,
+			});
+		}
+
+		res.status(200).json({ Questions });
+	} catch (error) {
+		res.status(500).send("Error fetching quiz attempt: " + error.message);
+	}
+});
+route.post("/quizzes/practice/attempt", studentMiddleware, async (req, res) => {
+  try {
+    const { quizId } = req.body;
+
+    if (!quizId) {
+      return res.status(400).json({ error: "quizId is required" });
+    }
+
+    const quiz = await quizModel.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // practice quiz should belong to the logged-in student
+    if (quiz.createdBy.toString() !== req.studentId) {
+      return res.status(403).json({ error: "You can only access your own practice quiz" });
+    }
+
+    const Questions = [];
+
+    for (const questionId of quiz.questions) {
+      const question = await Question.findById(questionId);
+
+      if (!question) {
+        return res.status(404).json({ error: `Question with ID ${questionId} not found` });
+      }
+
+      Questions.push({
+        _id: question._id,
+        questionText: question.questionText,
+        type: question.type,
+        options: question.options,
+      });
+    }
+
+    return res.status(200).json({ Questions });
+  } catch (error) {
+    return res.status(500).json({ error: "Error fetching practice quiz: " + error.message });
+  }
+});
+route.get("/quizzes/previous", studentMiddleware, async (req, res) => {
+  try {
+    const attempts = await PreviousQuiz.find({ studentId: req.studentId })
+      .populate("quizId")
+      .sort({ attemptedAt: -1 });
+
+    res.status(200).json(attempts);
+  } catch (e) {
+    res.status(500).json({ error: "Failed to fetch attempts" });
+  }
+});
+
+route.get("/quizzes/available", studentMiddleware, async (req, res) => {
+	try {
+		// Find the student's classroom and return quizzes assigned to it
+		const student = await studentModel.findById(req.studentId);
+		if (!student) return res.status(404).send("Student not found");
+		if (!student.classId) return res.status(404).send("Student is not in a classroom");
+
+		const classroom = await classModel
+			.findById(student.classId)
+			.populate({ path: "quizzes", model: "Quiz" });
+
+		if (!classroom || !classroom.quizzes || classroom.quizzes.length === 0) {
+			return res.status(404).send("No quizzes available for this classroom");
+		}
+
+		const now = new Date();
+		const quizzesWithStatus = classroom.quizzes.map((quiz) => {
+			let status = "unscheduled";
+			if (quiz.isScheduled) {
+				if (!quiz.scheduleAt) status = "unscheduled";
+				else if (new Date(quiz.scheduleAt) > now) status = "upcoming";
+				else status = "available";
+			}
+			return { ...quiz.toObject(), status };
+		});
+
+		res.status(200).json(quizzesWithStatus);
+	} catch (error) {
+		res.status(500).send("Error fetching quizzes: " + error.message);
+	}
+});
 
  
 
 route.post("/quizzes/submit", studentMiddleware, async (req, res) => {
     try {
         console.log("Submitting quiz with body:", req.body);
-        const { responses, questions,score } = req.body;
+        const { quizId, responses } = req.body;
         const studentId = req.studentId;
 
-       if(!studentId || !responses || !questions || !score) {
-        console.log("Missing fields")
+        if (!studentId || !quizId || !responses || typeof responses !== "object") {
             return res.status(400).json({ error: "Missing required fields" });
         }
-       
 
+        const quiz = await quizModel.findById(quizId).populate("questions");
+        if (!quiz) return res.status(404).json({ error: "Quiz not found" });
 
-        // Save to PreviousQuiz
+        // Calculate score based on correct answers
+        let correctCount = 0;
+        const attemptedQuestions = [];
+
+        for (const question of quiz.questions) {
+            const answer = responses[question._id];
+            const normalizedAnswer = typeof answer === "string" ? answer.trim().toLowerCase() : "";
+            const correctNormalized = String(question.correctAnswer).trim().toLowerCase();
+
+            if (normalizedAnswer === correctNormalized) {
+                correctCount += 1;
+            }
+
+            attemptedQuestions.push({
+                questionText: question.questionText,
+                type: question.type,
+                options: question.options,
+                correctAnswer: question.correctAnswer,
+            });
+        }
+
+        const score = correctCount;
+
         await PreviousQuiz.create({
             studentId,
-             questions,
-             responses,
+            quizId,
+            questions: attemptedQuestions,
+            responses,
             score,
-            attemptedAt: new Date()
+            attemptedAt: new Date(),
         });
 
         // Delete quiz from quizModel
@@ -217,7 +329,7 @@ route.post("/quizzes/submit", studentMiddleware, async (req, res) => {
 
      
 
-        res.status(200).json({ message: "Quiz submitted", score });
+        res.status(200).json({ message: "Quiz submitted", score, total: quiz.questions.length });
     } catch (e) {
         console.error(e);
         res.status(500).json({ error: "Failed to submit quiz" });
@@ -231,6 +343,17 @@ route.get("/quizzes/previous", studentMiddleware, async (req, res) => {
     res.status(200).json(attempts);
   } catch (e) {
     res.status(500).json({ error: "Failed to fetch attempts" });
+  }
+});
+route.get("/quizzes/practice", studentMiddleware, async (req, res) => {
+  try {
+    const quizzes = await quizModel
+      .find({ createdBy: req.studentId })
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json(quizzes);
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to fetch practice quizzes" });
   }
 });
 

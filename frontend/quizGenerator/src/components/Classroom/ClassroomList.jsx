@@ -12,9 +12,9 @@ const ClassroomList = ({ userId, role }) => {
       setError("");
       try {
         let url = "";
-  if (role === "teacher") url = `http://localhost:3141/api/classroom/teacher/${userId}`;
-  else url = `http://localhost:3141/api/classroom/student/${userId}`;
-  const res = await axios.get(url);
+      if (role === "teacher") url = `/api/v1/classroom/teacher/${userId}`;
+      else url = `/api/v1/classroom/student/${userId}`;
+      const res = await axios.get(url);
         setClassrooms(Array.isArray(res.data) ? res.data : [res.data]);
       } catch (err) {
         setError(err.response?.data?.message || "Error loading classrooms");

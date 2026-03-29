@@ -38,7 +38,9 @@ const navigate = useNavigate();
 
 
   alert("Quiz Created Successfully!");
-  navigate(`/student/practice-quiz/attempt/${data.quizId}`); 
+  navigate(`/student/quiz/attempt/${data.quizId}`, {
+  state: { type: "practice" },
+});
   setQuizGenerated(true);
 };
 

@@ -15,22 +15,13 @@ import tailwindcss from '@tailwindcss/vite' // Ensure this plugin is correctly s
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    // This is the crucial part for proxying API requests to your backend
+    // Proxy all /api requests to the backend server so the frontend can call
+    // relative paths like /api/v1/classroom/create without needing a hardcoded host.
     proxy: {
-      '/api': { // This will match any request path that starts with '/api'
-        target: 'https://quiz-generator-znsi.vercel.app' || 'http://localhost:3141', // Your backend server's address
-        changeOrigin: true, // Needed for proper host header handling in many proxy scenarios
-        // If your backend routes also include '/api' (e.g., /api/v1/teacher/quizzes)
-        // then you typically DON'T need a rewrite rule. The entire '/api' prefix
-        // will be forwarded to your target.
-        // rewrite: (path) => path.replace(/^\/api/, '/api'), // This line is usually NOT needed if your backend also uses '/api'
+      '/api': {
+        target: process.env.VITE_BACKEND_URL || 'http://localhost:3141',
+        changeOrigin: true,
       },
-      // If you have other backend routes that don't start with /api (e.g., /auth),
-      // you might need additional proxy entries:
-      // '/auth': {
-      //   target: 'http://localhost:3141',
-      //   changeOrigin: true,
-      // },
     },
   },
 })

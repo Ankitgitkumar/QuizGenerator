@@ -29,7 +29,7 @@ const MyQuizzes = () => {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`https://quiz-generator-znsi.vercel.app/api/v1/teacher/quiz/${id}`, {
+      await axios.delete(`http://localhost:3141/api/v1/teacher/quiz/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -45,7 +45,7 @@ const MyQuizzes = () => {
   };
 
   const handleViewResults = (id) => {
-    navigate(`/teacher/finalresults/${id}`); 
+    navigate(`/teacher/quiz/${id}/results`);
   };
 
   return (
@@ -102,12 +102,12 @@ const MyQuizzes = () => {
                     Delete
                   </button>
 
-                  {quiz.isScheduled && quiz.isCompleted && (
+                  {quiz.isScheduled && (
                     <button
                       onClick={() => handleViewResults(quiz._id)}
                       className="bg-yellow-500 text-white px-3 py-1 rounded text-sm"
                     >
-                      Result
+                      View Results
                     </button>
                   )}
                 </td>

@@ -13,7 +13,7 @@ const JoinClassroom = ({ studentId, onJoined }) => {
     setError("");
     setSuccess("");
     try {
-  const res = await axios.post("http://localhost:3141/api/classroom/join", { code, studentId });
+      const res = await axios.post("/api/v1/classroom/join", { code, studentId });
       setSuccess("Joined classroom!");
       setCode("");
       if (onJoined) onJoined(res.data.classroom);

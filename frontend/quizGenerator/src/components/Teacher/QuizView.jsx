@@ -28,23 +28,28 @@ const QuizView = () => {
     isScheduled: false,
   });
 
+  const [classrooms, setClassrooms] = useState([]);
+  const [selectedClassroom, setSelectedClassroom] = useState("");
+  const [assignStatus, setAssignStatus] = useState(null);
+
   const token = localStorage.getItem("teacherToken");
 
   
   useEffect(() => {
-    const fetchQuiz = async () => {
+    const fetchData = async () => {
       if (!token) {
         console.error("Authentication token not found. Redirecting to login.");
         navigate('/teacher/login');
         return;
       }
       if (!id) {
-          setError("No quiz ID provided.");
-          setLoading(false);
-          return;
+        setError("No quiz ID provided.");
+        setLoading(false);
+        return;
       }
 
       try {
+        // Fetch quiz details
         const res = await axios.get(`/api/v1/teacher/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -53,29 +58,43 @@ const QuizView = () => {
         setQuiz(fetchedQuiz);
 
         setQuizFormData({
-            title: fetchedQuiz.title,
-            topic: fetchedQuiz.topic,
-            duration: fetchedQuiz.duration || '',
-            scheduleAt: fetchedQuiz.scheduleAt ? new Date(fetchedQuiz.scheduleAt).toISOString().slice(0, 16) : '',
-            isScheduled: fetchedQuiz.isScheduled,
+          title: fetchedQuiz.title,
+          topic: fetchedQuiz.topic,
+          duration: fetchedQuiz.duration || '',
+          scheduleAt: fetchedQuiz.scheduleAt ? new Date(fetchedQuiz.scheduleAt).toISOString().slice(0, 16) : '',
+          isScheduled: fetchedQuiz.isScheduled,
         });
 
         setEditQuizMode(!fetchedQuiz.isScheduled);
 
-        setLoading(false);
+        // Fetch teacher classrooms for assignment
+        const meRes = await axios.get('/api/v1/teacher/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
+        const teacherId = meRes.data._id;
+        const classroomRes = await axios.get(`/api/v1/classroom/teacher/${teacherId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setClassrooms(classroomRes.data || []);
       } catch (err) {
-        console.error('Error fetching quiz:', err);
+        console.error('Error fetching quiz or classrooms:', err);
         setLoading(false);
         if (err.response) {
-            if (err.response.status === 404) setError("Quiz not found.");
-            else if (err.response.status === 401) { setError("Unauthorized to view this quiz. Please log in."); localStorage.removeItem("teacherToken"); navigate('/teacher/login'); }
-            else setError(`Failed to load quiz: ${err.response.status} ${err.response.statusText}`);
+          if (err.response.status === 404) setError("Quiz not found.");
+          else if (err.response.status === 401) {
+            setError("Unauthorized to view this quiz. Please log in.");
+            localStorage.removeItem("teacherToken");
+            navigate('/teacher/login');
+          } else setError(`Failed to load quiz: ${err.response.status} ${err.response.statusText}`);
         } else setError("Network error or server unavailable.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchQuiz();
+    fetchData();
   }, [id, token, navigate]);
 
   
@@ -92,18 +111,36 @@ const QuizView = () => {
     if (quiz.isScheduled) { alert("Cannot edit quiz details once it has been scheduled."); return; }
 
     try {
-        const updateData = {
-            title: quizFormData.title,
-            topic: quizFormData.topic,
-            duration: parseInt(quizFormData.duration),
-        };
-        await axios.patch(`/api/v1/teacher/quiz/${id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
-        alert("Quiz details updated successfully!");
-        setQuiz(prev => ({ ...prev, ...updateData }));
-        setEditQuizMode(false);
+      const updateData = {
+        title: quizFormData.title,
+        topic: quizFormData.topic,
+        duration: parseInt(quizFormData.duration),
+      };
+      await axios.patch(`/api/v1/teacher/quiz/${id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
+      alert("Quiz details updated successfully!");
+      setQuiz(prev => ({ ...prev, ...updateData }));
+      setEditQuizMode(false);
     } catch (err) {
-        console.error("Failed to update quiz details:", err);
-        alert(`Failed to update quiz details: ${err.response?.data?.message || err.message}`);
+      console.error("Failed to update quiz details:", err);
+      alert(`Failed to update quiz details: ${err.response?.data?.message || err.message}`);
+    }
+  };
+
+  const handleAssignQuiz = async () => {
+    if (!token) { alert("Please log in to assign quizzes."); navigate('/teacher/login'); return; }
+    if (!selectedClassroom) { alert("Select a classroom first."); return; }
+
+    try {
+      await axios.post(
+        "/api/v1/classroom/assign-quiz",
+        { classroomId: selectedClassroom, quizId: id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setAssignStatus({ type: 'success', message: 'Quiz assigned successfully!' });
+    } catch (err) {
+      console.error('Failed to assign quiz:', err);
+      setAssignStatus({ type: 'error', message: err.response?.data?.message || 'Failed to assign quiz' });
     }
   };
 
@@ -270,6 +307,42 @@ const QuizView = () => {
                     <button onClick={() => setEditQuizMode(true)} className="mt-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-lg shadow-md transition duration-300">Edit Details</button>
                 )}
             </>
+        )}
+      </div>
+
+      {/* Assign quiz to classroom */}
+      <div className="mb-8 bg-gray-800 p-6 rounded-xl border border-gray-700">
+        <h2 className="text-2xl font-bold mb-3">Assign this quiz to a classroom</h2>
+        {classrooms.length === 0 ? (
+          <p className="text-gray-400 mb-3">
+            You don't have any classrooms yet. Create one from your dashboard to assign quizzes.
+          </p>
+        ) : (
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <select
+              value={selectedClassroom}
+              onChange={(e) => setSelectedClassroom(e.target.value)}
+              className="w-full md:w-2/3 p-2 rounded bg-gray-700 text-white border border-gray-600"
+            >
+              <option value="">Select a classroom</option>
+              {classrooms.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name} {c.code ? `(${c.code})` : ''}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleAssignQuiz}
+              className="w-full md:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold"
+            >
+              Assign Quiz
+            </button>
+          </div>
+        )}
+        {assignStatus && (
+          <p className={`mt-3 ${assignStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+            {assignStatus.message}
+          </p>
         )}
       </div>
 

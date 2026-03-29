@@ -33,7 +33,10 @@ app.use("/api/v1/student", studentRoute);
 
 app.use("/api/v1/teacher/quizzes", quizRoutes);
 
+// Mount classroom routes under both versioned and unversioned paths for backwards compatibility
+app.use('/api/v1/classroom', classroomRoute);
 app.use('/api/classroom', classroomRoute);
+
 // Optional test route
 app.get("/", (req, res) => {
   res.send("Quiz Generator API is running 🚀");

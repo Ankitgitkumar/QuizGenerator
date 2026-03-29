@@ -1,6 +1,7 @@
 import express from 'express';
 import db from "../db.js";
 import mongoose from "mongoose";
+import studentMiddleware from "../middlewares/student.js";
 const { classModel, quizModel, studentModel, teacherModel } = db;
 const route = express.Router();
 
@@ -35,13 +36,44 @@ route.post("/create", async (req, res) => {
 });
 
 // Join a classroom (student)
-route.post("/join", async (req, res) => {
+route.post("/join", studentMiddleware, async (req, res) => {
 	try {
-		const { code, studentId } = req.body;
+		const { code } = req.body;
+		const studentId = req.studentId;
+
 		const classroom = await classModel.findOne({ code });
 		if (!classroom) return res.status(404).json({ message: "Classroom not found" });
+
+		// Assign the classroom to the student
 		await studentModel.findByIdAndUpdate(studentId, { classId: classroom._id });
+
+		// Keep track of which students are in each classroom
+		classroom.students = classroom.students || [];
+		if (!classroom.students.some((id) => id.toString() === studentId)) {
+			classroom.students.push(studentId);
+			await classroom.save();
+		}
+
 		res.json({ message: "Joined classroom", classroom });
+	} catch (err) {
+		res.status(500).json({ message: err.message });
+	}
+});
+
+// Assign quiz to classroom (teacher only)
+route.post("/assign-quiz", async (req, res) => {
+	try {
+		const { classroomId, quizId } = req.body;
+		const classroom = await classModel.findById(classroomId);
+		if (!classroom) return res.status(404).json({ message: "Classroom not found" });
+
+		classroom.quizzes = classroom.quizzes || [];
+		if (!classroom.quizzes.some((id) => id.toString() === quizId)) {
+			classroom.quizzes.push(quizId);
+			await classroom.save();
+		}
+
+		res.json({ message: "Quiz assigned", classroom });
 	} catch (err) {
 		res.status(500).json({ message: err.message });
 	}
@@ -57,28 +89,15 @@ route.get("/teacher/:teacherId", async (req, res) => {
 	}
 });
 
-// List classroom for a student
-route.get("/student/:studentId", async (req, res) => {
+// Get the classroom for the authenticated student
+route.get("/me", studentMiddleware, async (req, res) => {
 	try {
-		const student = await studentModel.findById(req.params.studentId);
+		const student = await studentModel.findById(req.studentId);
 		if (!student || !student.classId) return res.status(404).json({ message: "No classroom found" });
-		const classroom = await classModel.findById(student.classId);
-		res.json(classroom);
-	} catch (err) {
-		res.status(500).json({ message: err.message });
-	}
-});
-
-// Assign quiz to classroom (teacher only)
-route.post("/assign-quiz", async (req, res) => {
-	try {
-		const { classroomId, quizId } = req.body;
-		const classroom = await classModel.findById(classroomId);
-		if (!classroom) return res.status(404).json({ message: "Classroom not found" });
-		classroom.quizzes = classroom.quizzes || [];
-		classroom.quizzes.push(quizId);
-		await classroom.save();
-		res.json({ message: "Quiz assigned", classroom });
+		const classroom = await classModel
+			.findById(student.classId)
+			.populate({ path: "quizzes", model: "Quiz" });
+		res.json({ classroom });
 	} catch (err) {
 		res.status(500).json({ message: err.message });
 	}

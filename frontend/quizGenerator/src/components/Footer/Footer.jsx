@@ -14,10 +14,10 @@ function Footer() {
             <h3 className="text-xl text-gray-300 font-semibold mb-2">Ankit Kumar</h3>
             <ul className="space-y-1 text-gray-400">
               <li>
-                <a href="https://www.linkedin.com/in/your-link" target="_blank" className="hover:text-white">🔗 LinkedIn</a>
+                <a href="https://www.linkedin.com/in/ankit-kumar-ab625b2b9" target="_blank" className="hover:text-white">🔗 LinkedIn</a>
               </li>
               <li>
-                <a href="https://github.com/your-github" target="_blank" className="hover:text-white">💻 GitHub</a>
+                <a href="https://github.com/Ankitgitkumar" target="_blank" className="hover:text-white">💻 GitHub</a>
               </li>
               <li>
                 <a href="mailto:ankitkumar26125@gmail.com" className="hover:text-white">📧 ankitkumar26125@gmail.com</a>

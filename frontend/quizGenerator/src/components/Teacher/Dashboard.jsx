@@ -25,7 +25,7 @@ const Dashboard = () => {
 
             try {
                 
-                const response = await axios.get('/api/v1/teacher/me', {
+                const response = await axios.get('https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/me', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

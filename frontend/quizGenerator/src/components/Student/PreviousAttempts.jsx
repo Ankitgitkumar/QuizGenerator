@@ -12,7 +12,7 @@ const PreviousAttempts = () => {
         const token = localStorage.getItem("studentToken");
 
         const res = await axios.get(
-          "http://localhost:3141/api/v1/student/quizzes/previous",
+          "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/previous",
           {
             headers: { Authorization: `Bearer ${token}` },
           }

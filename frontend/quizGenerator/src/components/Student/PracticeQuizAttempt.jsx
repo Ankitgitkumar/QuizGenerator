@@ -29,8 +29,8 @@ const QuizAttempt = () => {
 
         const url =
           quizType === "practice"
-            ? "http://localhost:3141/api/v1/student/quizzes/practice/attempt"
-            : "http://localhost:3141/api/v1/student/quizzes/attempt";
+            ? "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/practice/attempt"
+            : "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/attempt";
 
         const res = await axios.post(
           url,
@@ -102,43 +102,44 @@ const QuizAttempt = () => {
   };
 
   const handleSubmit = async () => {
-    if (submitting) return;
-    setSubmitting(true);
+  if (submitting) return;
+  setSubmitting(true);
 
-    try {
-      const token = localStorage.getItem("studentToken");
+  try {
+    const token = localStorage.getItem("studentToken");
 
-      const res = await axios.post(
-        "http://localhost:3141/api/v1/student/quizzes/submit",
-        {
-          quizId: quizid,
-          responses,
+    const res = await axios.post(
+      "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/submit",
+      {
+        quizId: quizid,
+        responses,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      }
+    );
 
-      const { score, total } = res.data || {};
+    // ✅ GET questions from backend response
+    const { score, total, questions: reviewQuestions } = res.data || {};
 
-      navigate(`/student/quiz/attempt/${quizid}/review`, {
-        state: {
-          questions,
-          responses,
-          score,
-          total,
-          type: quizType,
-        },
-      });
-    } catch (err) {
-      console.error("Submit quiz error:", err.response?.data || err.message);
-      alert(err.response?.data?.error || "Failed to submit quiz. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    navigate(`/student/quiz/attempt/${quizid}/review`, {
+      state: {
+        questions: reviewQuestions || [],   // ✅ FIXED
+        responses,
+        score,
+        total,
+        type: quizType,
+      },
+    });
+  } catch (err) {
+    console.error("Submit quiz error:", err.response?.data || err.message);
+    alert(err.response?.data?.error || "Failed to submit quiz. Please try again.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (loading) {
     return <div className="text-white text-center mt-10">Loading quiz...</div>;

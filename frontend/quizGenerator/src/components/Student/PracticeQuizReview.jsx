@@ -12,28 +12,29 @@ const PracticeQuizReview = () => {
   }
 
   const getUserAnswer = (q, i) => {
-    // Normal case: question has _id
     if (q._id && res.responses[q._id] !== undefined) {
       return res.responses[q._id];
     }
 
-    // Fallback for previous attempts where _id may not exist
-    const responseValues = Object.values(res.responses || {});
-    return responseValues[i];
+    const v = Object.values(res.responses || {});
+    return v[i];
   };
 
   const getStatus = (q, i) => {
     const userAns = getUserAnswer(q, i);
 
-    if (!userAns) return "wrong";
+    if (userAns === undefined || userAns === null || userAns === "") {
+      return "wrong";
+    }
 
     if (q.type === "mcq") {
       return userAns === q.correctAnswer ? "correct" : "wrong";
     }
 
-    return userAns?.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()
-      ? "correct"
-      : "wrong";
+    const u = String(userAns || "").trim().toLowerCase();
+    const c = String(q.correctAnswer || "").trim().toLowerCase();
+
+    return u === c ? "correct" : "wrong";
   };
 
   return (
@@ -60,7 +61,7 @@ const PracticeQuizReview = () => {
 
               {q.type === "mcq" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {q.options.map((opt) => {
+                  {(q.options || []).map((opt) => {
                     const isSelected = userAns === opt;
                     const isCorrect = opt === q.correctAnswer;
 
@@ -99,7 +100,7 @@ const PracticeQuizReview = () => {
 
               {status === "wrong" && (
                 <p className="mt-3 text-sm text-yellow-400">
-                  Correct Answer: {q.correctAnswer}
+                  Correct Answer: {q.correctAnswer || "Not available"}
                 </p>
               )}
             </div>

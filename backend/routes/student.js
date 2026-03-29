@@ -280,60 +280,63 @@ route.get("/quizzes/available", studentMiddleware, async (req, res) => {
  
 
 route.post("/quizzes/submit", studentMiddleware, async (req, res) => {
-    try {
-        console.log("Submitting quiz with body:", req.body);
-        const { quizId, responses } = req.body;
-        const studentId = req.studentId;
+  try {
+    console.log("Submitting quiz with body:", req.body);
+    const { quizId, responses } = req.body;
+    const studentId = req.studentId;
 
-        if (!studentId || !quizId || !responses || typeof responses !== "object") {
-            return res.status(400).json({ error: "Missing required fields" });
-        }
-
-        const quiz = await quizModel.findById(quizId).populate("questions");
-        if (!quiz) return res.status(404).json({ error: "Quiz not found" });
-
-        // Calculate score based on correct answers
-        let correctCount = 0;
-        const attemptedQuestions = [];
-
-        for (const question of quiz.questions) {
-            const answer = responses[question._id];
-            const normalizedAnswer = typeof answer === "string" ? answer.trim().toLowerCase() : "";
-            const correctNormalized = String(question.correctAnswer).trim().toLowerCase();
-
-            if (normalizedAnswer === correctNormalized) {
-                correctCount += 1;
-            }
-
-            attemptedQuestions.push({
-                questionText: question.questionText,
-                type: question.type,
-                options: question.options,
-                correctAnswer: question.correctAnswer,
-            });
-        }
-
-        const score = correctCount;
-
-        await PreviousQuiz.create({
-            studentId,
-            quizId,
-            questions: attemptedQuestions,
-            responses,
-            score,
-            attemptedAt: new Date(),
-        });
-
-        // Delete quiz from quizModel
-        
-
-     
-
-        res.status(200).json({ message: "Quiz submitted", score, total: quiz.questions.length });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Failed to submit quiz" });
+    if (!studentId || !quizId || !responses || typeof responses !== "object") {
+      return res.status(400).json({ error: "Missing required fields" });
     }
+
+    const quiz = await quizModel.findById(quizId).populate("questions");
+    if (!quiz) return res.status(404).json({ error: "Quiz not found" });
+
+    let correctCount = 0;
+    const attemptedQuestions = [];
+
+    for (const question of quiz.questions) {
+      const answer = responses[question._id];
+      const normalizedAnswer =
+        typeof answer === "string" ? answer.trim().toLowerCase() : "";
+      const correctNormalized = String(question.correctAnswer || "")
+        .trim()
+        .toLowerCase();
+
+      if (normalizedAnswer === correctNormalized) {
+        correctCount += 1;
+      }
+
+      attemptedQuestions.push({
+        _id: question._id,
+        questionText: question.questionText,
+        type: question.type,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+      });
+    }
+
+    const score = correctCount;
+
+    await PreviousQuiz.create({
+      studentId,
+      quizId,
+      questions: attemptedQuestions,
+      responses,
+      score,
+      attemptedAt: new Date(),
+    });
+
+    res.status(200).json({
+      message: "Quiz submitted",
+      score,
+      total: quiz.questions.length,
+      questions: attemptedQuestions,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to submit quiz" });
+  }
 });
 
 

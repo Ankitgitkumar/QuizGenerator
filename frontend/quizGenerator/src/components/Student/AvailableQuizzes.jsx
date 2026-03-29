@@ -13,7 +13,7 @@ const PracticeQuizzes = () => {
     const fetchQuizzes = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:3141/api/v1/student/quizzes/practice",
+          "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/practice",
           {
             headers: {
               Authorization: `Bearer ${token}`,

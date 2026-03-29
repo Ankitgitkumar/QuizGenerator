@@ -18,7 +18,7 @@ const navigate = useNavigate();
 
   const token = localStorage.getItem("studentToken");
 
-  const res = await fetch("http://localhost:3141/api/v1/student/quizzes/create", {
+  const res = await fetch("https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/create", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

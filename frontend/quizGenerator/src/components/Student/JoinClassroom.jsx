@@ -23,7 +23,7 @@
 //       }
 
 //       await axios.post(
-//         'http://localhost:3141/api/v1/classroom/join',
+//         'https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/join',
 //         { code },
 //         { headers: { Authorization: `Bearer ${token}` } }
 //       );
@@ -73,7 +73,7 @@ const JoinClassroom = () => {
       }
 
       const res = await axios.post(
-        'http://localhost:3141/api/v1/classroom/join',
+        'https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/join',
         { code },
         {
           headers: {

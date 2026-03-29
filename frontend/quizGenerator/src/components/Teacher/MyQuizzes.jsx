@@ -11,7 +11,7 @@ const MyQuizzes = () => {
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        const res = await axios.get('http://localhost:3141/api/v1/teacher/quizzes', {
+        const res = await axios.get('https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quizzes', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -29,7 +29,7 @@ const MyQuizzes = () => {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`http://localhost:3141/api/v1/teacher/quiz/${id}`, {
+      await axios.delete(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quiz/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

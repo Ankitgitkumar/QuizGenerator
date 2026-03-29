@@ -50,7 +50,7 @@ const QuizView = () => {
 
       try {
         // Fetch quiz details
-        const res = await axios.get(`/api/v1/teacher/${id}`, {
+        const res = await axios.get(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -68,12 +68,12 @@ const QuizView = () => {
         setEditQuizMode(!fetchedQuiz.isScheduled);
 
         // Fetch teacher classrooms for assignment
-        const meRes = await axios.get('/api/v1/teacher/me', {
+        const meRes = await axios.get('https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const teacherId = meRes.data._id;
-        const classroomRes = await axios.get(`/api/v1/classroom/teacher/${teacherId}`, {
+        const classroomRes = await axios.get(`https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/teacher/${teacherId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -116,7 +116,7 @@ const QuizView = () => {
         topic: quizFormData.topic,
         duration: parseInt(quizFormData.duration),
       };
-      await axios.patch(`/api/v1/teacher/quiz/${id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.patch(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quiz/${id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
       alert("Quiz details updated successfully!");
       setQuiz(prev => ({ ...prev, ...updateData }));
       setEditQuizMode(false);
@@ -132,7 +132,7 @@ const QuizView = () => {
 
     try {
       await axios.post(
-        "/api/v1/classroom/assign-quiz",
+        "https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/assign-quiz",
         { classroomId: selectedClassroom, quizId: id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -149,7 +149,7 @@ const QuizView = () => {
     if (!quizFormData.scheduleAt) { alert("Please select a date and time to schedule the quiz."); return; }
 
     try {
-        await axios.patch(`/api/v1/teacher/quiz/${id}/schedule`, { scheduleAt: quizFormData.scheduleAt }, { headers: { Authorization: `Bearer ${token}` } });
+        await axios.patch(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quiz/${id}/schedule`, { scheduleAt: quizFormData.scheduleAt }, { headers: { Authorization: `Bearer ${token}` } });
         alert("Quiz scheduled successfully!");
         setQuiz(prev => ({ ...prev, scheduleAt: new Date(quizFormData.scheduleAt), isScheduled: true }));
         setQuizFormData(prev => ({ ...prev, isScheduled: true }));
@@ -222,7 +222,7 @@ const QuizView = () => {
             }
         }
 
-        const res = await axios.patch(`/api/v1/teacher/question/${editingQuestionId}`, dataToSend, {
+        const res = await axios.patch(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/question/${editingQuestionId}`, dataToSend, {
             headers: { Authorization: `Bearer ${token}` }
         });
 

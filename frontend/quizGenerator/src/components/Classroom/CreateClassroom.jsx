@@ -17,7 +17,7 @@ const CreateClassroom = ({ teacherId, onCreated }) => {
     try {
       const payload = { name, teacherId };
       if (code.trim()) payload.code = code.trim();
-      const res = await axios.post("/api/v1/classroom/create", payload);
+      const res = await axios.post("https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/create", payload);
       setSuccess(`Classroom created! Code: ${res.data.code}`);
       setName("");
       setCode("");

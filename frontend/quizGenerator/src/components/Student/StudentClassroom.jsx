@@ -18,7 +18,7 @@ const StudentClassroom = () => {
       }
 
       try {
-        const res = await axios.get("http://localhost:3141/api/v1/classroom/me", {
+        const res = await axios.get("https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

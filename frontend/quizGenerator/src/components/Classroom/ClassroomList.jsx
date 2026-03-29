@@ -12,8 +12,8 @@ const ClassroomList = ({ userId, role }) => {
       setError("");
       try {
         let url = "";
-      if (role === "teacher") url = `/api/v1/classroom/teacher/${userId}`;
-      else url = `/api/v1/classroom/student/${userId}`;
+      if (role === "teacher") url = `https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/teacher/${userId}`;
+      else url = `https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/student/${userId}`;
       const res = await axios.get(url);
         setClassrooms(Array.isArray(res.data) ? res.data : [res.data]);
       } catch (err) {

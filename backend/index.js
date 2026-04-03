@@ -13,6 +13,7 @@ import quizRoutes from './routes/teacher.js';
 import classroomRoute from './routes/classroom.js'; 
 
 dotenv.config();
+const port = process.env.PORT || 3141;
 
 const app = express();
 
@@ -49,8 +50,8 @@ async function main() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");
 
-    app.listen(3141, () => {
-      console.log(`Server running at http://localhost:3141`);
+    app.listen(port, () => {
+      console.log(`Server running at http://localhost:${port}`);
     });
   } catch (error) {
     console.error("MongoDB connection error:", error.message);

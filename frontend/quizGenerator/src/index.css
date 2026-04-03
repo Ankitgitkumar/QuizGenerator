@@ -11,7 +11,9 @@ body {
   background-color: #111827;
   
 }
-
+html {
+  scroll-behavior: smooth;
+}
 /* Main grid container */
 .bg-grid {
   width: 100vw;

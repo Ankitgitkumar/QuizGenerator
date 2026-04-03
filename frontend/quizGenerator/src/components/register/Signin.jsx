@@ -14,11 +14,7 @@ function Signin() {
   async function submitHandler(e) {
     e.preventDefault();
 
-    console.log("Submit button clicked");
-    console.log("Form values:", email, role);
-
     if (!email || !password) {
-      console.log("Please fill all fields.");
       return;
     }
 
@@ -30,18 +26,15 @@ function Signin() {
         };
 
         const res = await axios.post(`${API_BASE_URL}/teacher/signin`, teacher);
-        console.log("Teacher Signin Success:", res.data);
 
         const token = res.data.token || res.data.teacherToken || res.data.jwt;
 
         if (!token) {
-          console.error("Teacher token not found in backend response");
           alert("Teacher token not received from server");
           return;
         }
 
         localStorage.setItem("teacherToken", token);
-        console.log("Saved teacherToken:", localStorage.getItem("teacherToken"));
 
         navigate("/teacher/dashboard");
       } else if (role === "student") {
@@ -51,12 +44,10 @@ function Signin() {
         };
 
         const res = await axios.post(`${API_BASE_URL}/student/signin`, student);
-        console.log("Student Signin Success:", res.data);
 
         const token = res.data.token || res.data.studentToken || res.data.jwt;
 
         if (!token) {
-          console.error("Student token not found in backend response");
           alert("Student token not received from server");
           return;
         }
@@ -64,13 +55,9 @@ function Signin() {
         localStorage.setItem("studentToken", token);
         localStorage.setItem("studentData", JSON.stringify(res.data.student));
 
-        console.log("Saved studentToken:", localStorage.getItem("studentToken"));
-        console.log("Saved studentData:", localStorage.getItem("studentData"));
-
         navigate("/student/dashboard");
       }
     } catch (error) {
-      console.log("Signin Error:", error.response?.data || error.message);
       alert(error.response?.data?.message || "Signin failed");
     }
   }

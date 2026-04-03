@@ -57,7 +57,6 @@ const JoinClassroom = () => {
 
     try {
       const token = localStorage.getItem('studentToken');
-      console.log('studentToken:', token);
 
       if (!token) {
         setError('Please sign in as a student first.');
@@ -83,11 +82,8 @@ const JoinClassroom = () => {
         }
       );
 
-      console.log('Join response:', res.data);
       navigate('/student/classroom');
     } catch (err) {
-      console.error('Failed to join classroom:', err);
-      console.error('Backend response:', err.response?.data);
       setError(err.response?.data?.message || 'Failed to join classroom');
     }
   };

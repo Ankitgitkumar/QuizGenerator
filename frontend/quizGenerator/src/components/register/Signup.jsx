@@ -16,11 +16,7 @@ function Signup() {
   async function submitHandler(e) {
     e.preventDefault();
 
-    console.log("Submit button clicked");
-    console.log("Form values:", fN, lN, email, role);
-
     if (fN.length > 0 && lN.length > 0 && email.length > 0 && password.length > 0) {
-      console.log("Selected Role:", role);
 
       if (role === "teacher") {
         const teacher = {
@@ -31,7 +27,6 @@ function Signup() {
         };
         try {
           const res = await axios.post(`${API_BASE_URL}/teacher/signup`, teacher);
-          console.log("Teacher Signup Success:", res.data);
 
           localStorage.setItem("teacherToken", res.data.token);
           if (res.data.teacher) {
@@ -44,7 +39,6 @@ function Signup() {
 
           navigate("/teacher/dashboard");
         } catch (error) {
-          console.log("Teacher Signup Error:", error.response?.data || error.message);
         }
       } else if (role === "student") {
         const student = {
@@ -55,7 +49,6 @@ function Signup() {
         };
         try {
           const res = await axios.post(`${API_BASE_URL}/student/signup`, student);
-          console.log("Student Signup Success:", res.data);
 
           localStorage.setItem("studentToken", res.data.token);
           if (res.data.student) {
@@ -68,11 +61,9 @@ function Signup() {
 
           navigate("/student/dashboard");
         } catch (error) {
-          console.log("Student Signup Error:", error.response?.data || error.message);
         }
       }
     } else {
-      console.log("Please fill all fields.");
     }
   }
 

@@ -24,8 +24,8 @@ route.post("/signup",async (req,res)=> {
             firstName,
             lastName,
         });
-        // Optionally, create a JWT token here if you want auto-login after signup
-        res.status(201).json({ message: "Student signed up", student });
+        const token = jwt.sign({ studentId: student._id }, process.env.JWT_STUDENT_PASSWORD);
+        res.status(201).json({ message: "Student signed up", token, student });
     }
     catch(e){
         res.status(500).send("Error signing up user: " + e.message);

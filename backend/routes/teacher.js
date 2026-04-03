@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import models from "../db.js";
 const teacherModel = models.teacherModel;
+const JWT_TEACHER_PASSWORD = "teacher_password_jwt";
 import { updateQuestion } from "../controllers/questionController.js";
 import {getTeacherProfile} from "../controllers/teacherController.js";
 
@@ -39,7 +40,7 @@ route.post("/signup", async (req, res) => {
 
     // Fetch the newly created teacher so we can return a token and basic profile
     const teacher = await teacherModel.findOne({ email });
-    const token = jwt.sign({ teacherId: teacher._id.toString() }, process.env.JWT_TEACHER_PASSWORD);
+    const token = jwt.sign({ teacherId: teacher._id.toString() }, JWT_TEACHER_PASSWORD);
     const teacherData = {
       _id: teacher._id,
       firstName: teacher.firstName,
@@ -50,7 +51,7 @@ route.post("/signup", async (req, res) => {
     res.status(201).json({ message: 'Teacher signed up', token, teacher: teacherData });
 }
 catch(e){
-    res.send("Error signing up user: " + e.message);
+    res.status(500).send("Error signing up user: " + e.message);
 }
 })
 
@@ -67,7 +68,7 @@ route.post('/signin', async (req,res)=> {
         }
         const token = jwt.sign(
             { teacherId: teacher._id.toString() },
-            process.env.JWT_TEACHER_PASSWORD
+            JWT_TEACHER_PASSWORD
         );
 
         // Return a small teacher object along with the token to avoid immediate /me call from the client

@@ -39,7 +39,7 @@ const QuizView = () => {
     const fetchData = async () => {
       if (!token) {
         console.error("Authentication token not found. Redirecting to login.");
-        navigate('/teacher/login');
+        navigate('/signin');
         return;
       }
       if (!id) {
@@ -107,7 +107,7 @@ const QuizView = () => {
   };
 
   const handleSaveQuizDetails = async () => {
-    if (!token) { alert("Please log in to save changes."); navigate('/teacher/login'); return; }
+    if (!token) { alert("Please log in to save changes."); navigate('/signin'); return; }
     if (quiz.isScheduled) { alert("Cannot edit quiz details once it has been scheduled."); return; }
 
     try {
@@ -127,7 +127,7 @@ const QuizView = () => {
   };
 
   const handleAssignQuiz = async () => {
-    if (!token) { alert("Please log in to assign quizzes."); navigate('/teacher/login'); return; }
+    if (!token) { alert("Please log in to assign quizzes."); navigate('/signin'); return; }
     if (!selectedClassroom) { alert("Select a classroom first."); return; }
 
     try {
@@ -145,7 +145,7 @@ const QuizView = () => {
   };
 
   const handleScheduleQuiz = async () => {
-    if (!token) { alert("Please log in to schedule the quiz."); navigate('/teacher/login'); return; }
+    if (!token) { alert("Please log in to schedule the quiz."); navigate('/signin'); return; }
     if (!quizFormData.scheduleAt) { alert("Please select a date and time to schedule the quiz."); return; }
 
     try {
@@ -196,7 +196,7 @@ const QuizView = () => {
   };
 
   const handleSaveQuestion = async () => {
-    if (!token) { alert("Please log in to save question."); navigate('/teacher/login'); return; }
+    if (!token) { alert("Please log in to save question."); navigate('/signin'); return; }
     if (!editingQuestionId) { alert("No question selected for editing."); return; }
 
     try {

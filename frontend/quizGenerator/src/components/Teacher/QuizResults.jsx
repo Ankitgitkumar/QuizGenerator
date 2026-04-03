@@ -13,7 +13,7 @@ const QuizResults = () => {
     const fetchResults = async () => {
       const token = localStorage.getItem("teacherToken");
       if (!token) {
-        navigate("/teacher/login");
+        navigate("/signin");
         return;
       }
 

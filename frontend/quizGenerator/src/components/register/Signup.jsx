@@ -39,6 +39,7 @@ function Signup() {
 
           navigate("/teacher/dashboard");
         } catch (error) {
+          console.error("Teacher signup error:", error.response?.data || error.message);
         }
       } else if (role === "student") {
         const student = {
@@ -61,6 +62,7 @@ function Signup() {
 
           navigate("/student/dashboard");
         } catch (error) {
+          console.error("Student signup error:", error.response?.data || error.message);
         }
       }
     } else {

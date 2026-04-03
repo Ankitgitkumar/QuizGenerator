@@ -42,7 +42,7 @@ const Dashboard = () => {
                 
                 if (err.response && err.response.status === 401) {
                     localStorage.removeItem("teacherToken"); 
-                    navigate('/teacher/login'); 
+                    navigate('/signin'); 
                 }
                 
             }
@@ -63,7 +63,7 @@ const Dashboard = () => {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-red-500">
                 <p>{error}</p>
-                <button onClick={() => navigate('/teacher/login')} className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                <button onClick={() => navigate('/signin')} className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
                     Go to Login
                 </button>
             </div>

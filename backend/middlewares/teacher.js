@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+const JWT_TEACHER_PASSWORD = "teacher_password_jwt";
 
 function teacherMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
@@ -7,14 +8,8 @@ function teacherMiddleware(req, res, next) {
     return res.status(401).send("Unauthorized: Token missing");
   }
 
-  const secret = process.env.JWT_TEACHER_PASSWORD;
-  if (!secret) {
-    console.error('JWT_TEACHER_PASSWORD env var is not set');
-    return res.status(500).send('Server misconfiguration: auth secret missing');
-  }
-
   try {
-    const decodedToken = jwt.verify(token, secret);
+    const decodedToken = jwt.verify(token, JWT_TEACHER_PASSWORD);
     req.teacherId = decodedToken.teacherId;
     next();
   } catch (error) {

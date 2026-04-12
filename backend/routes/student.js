@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import models from "../db.js";
 const studentModel = models.studentModel;
+const JWT_STUDENT_PASSWORD = "student_password_jwt";
 const quizModel = models.quizModel;
 const classModel = models.classModel;
 const Question = models.questionModel;
@@ -24,11 +25,14 @@ route.post("/signup",async (req,res)=> {
             firstName,
             lastName,
         });
-        const token = jwt.sign({ studentId: student._id }, process.env.JWT_STUDENT_PASSWORD);
+        const token = jwt.sign({ studentId: student._id }, JWT_STUDENT_PASSWORD);
         res.status(201).json({ message: "Student signed up", token, student });
     }
     catch(e){
-        res.status(500).send("Error signing up user: " + e.message);
+        if (e.code === 11000) {
+            return res.status(400).json({ message: 'Email already exists. Please use a different email or sign in.' });
+        }
+        res.status(500).json({ message: "Error signing up user: " + e.message });
     }
 })
  
@@ -46,7 +50,7 @@ route.post('/signin', async (req,res)=> {
         const token=jwt.sign(
             {
                 studentId:student._id,
-            },process.env.JWT_STUDENT_PASSWORD
+            },JWT_STUDENT_PASSWORD
         );
         res.status(200).json({ message: "Student signed in", token, student });
 

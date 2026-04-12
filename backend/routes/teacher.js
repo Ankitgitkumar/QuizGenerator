@@ -51,7 +51,10 @@ route.post("/signup", async (req, res) => {
     res.status(201).json({ message: 'Teacher signed up', token, teacher: teacherData });
 }
 catch(e){
-    res.status(500).send("Error signing up user: " + e.message);
+    if (e.code === 11000) {
+        return res.status(400).json({ message: 'Email already exists. Please use a different email or sign in.' });
+    }
+    res.status(500).json({ message: "Error signing up user: " + e.message });
 }
 })
 

@@ -11,12 +11,17 @@ function Signup() {
   const [email, setemail] = useState("");
   const [password, setpassword] = useState("");
   const [role, setrole] = useState("student");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   async function submitHandler(e) {
     e.preventDefault();
+    setError(""); // Clear previous errors
 
     if (fN.length > 0 && lN.length > 0 && email.length > 0 && password.length > 0) {
+      setLoading(true);
+      console.log("Attempting signup for role:", role);
 
       if (role === "teacher") {
         const teacher = {
@@ -26,7 +31,9 @@ function Signup() {
           password: password,
         };
         try {
-          const res = await axios.post(`${API_BASE_URL}/teacher/signup`, teacher);
+          console.log("Sending teacher signup request");
+          const res = await axios.post(`${API_BASE_URL}/teacher/signup`, teacher, { timeout: 30000 });
+          console.log("Teacher signup response:", res.data);
 
           localStorage.setItem("teacherToken", res.data.token);
           if (res.data.teacher) {
@@ -39,7 +46,11 @@ function Signup() {
 
           navigate("/teacher/dashboard");
         } catch (error) {
-          console.error("Teacher signup error:", error.response?.data || error.message);
+          const errorMsg = error.response?.data?.message || error.message || "Signup failed";
+          setError(errorMsg);
+          console.error("Teacher signup error:", error);
+        } finally {
+          setLoading(false);
         }
       } else if (role === "student") {
         const student = {
@@ -49,8 +60,10 @@ function Signup() {
           password: password,
         };
         try {
-          const res = await axios.post(`${API_BASE_URL}/student/signup`, student);
-
+          console.log("Sending student signup request");
+          const res = await axios.post(`${API_BASE_URL}/student/signup`, student, { timeout: 30000 });
+          console.log("Student signup response:", res.data);
+            
           localStorage.setItem("studentToken", res.data.token);
           if (res.data.student) {
             localStorage.setItem("studentData", JSON.stringify(res.data.student));
@@ -62,10 +75,15 @@ function Signup() {
 
           navigate("/student/dashboard");
         } catch (error) {
-          console.error("Student signup error:", error.response?.data || error.message);
+          const errorMsg = error.response?.data?.message || error.message || "Signup failed";
+          setError(errorMsg);
+          console.error("Student signup error:", error);
+        } finally {
+          setLoading(false);
         }
       }
     } else {
+      setError("Please fill in all fields");
     }
   }
 
@@ -75,6 +93,12 @@ function Signup() {
         <h1 className="text-gray-100 font-bold text-3xl sm:text-4xl text-center mb-8">
           Sign Up
         </h1>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-300 text-sm">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={submitHandler} className="flex flex-col items-center">
           <div className="w-full space-y-5">
@@ -139,9 +163,10 @@ function Signup() {
 
           <button
             type="submit"
-            className="w-full mt-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold text-base sm:text-lg shadow-lg hover:scale-[1.02] hover:shadow-blue-500/20 transition duration-300"
+            disabled={loading}
+            className="w-full mt-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold text-base sm:text-lg shadow-lg hover:scale-[1.02] hover:shadow-blue-500/20 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign Up
+            {loading ? "Signing Up..." : "Sign Up"}
           </button>
         </form>
       </div>

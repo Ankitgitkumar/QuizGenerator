@@ -34,12 +34,19 @@ const app = express();
 // ─── Security Middleware ──────────────────────────────────────────────────────
 
 // Sets secure HTTP headers (XSS, clickjacking, MIME sniffing, etc.)
-// Disable HSTS when running on plain HTTP (no SSL termination) to avoid
-// the browser force-upgrading requests to https:// and breaking asset loads.
+// On plain HTTP (no ALB/SSL termination) we must disable:
+//   - hsts: stops browser permanently switching to https://
+//   - upgradeInsecureRequests: stops CSP forcing CSS/JS/image loads to https://
+const isHttps = process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true';
 app.use(helmet({
-  hsts: process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true'
-    ? { maxAge: 31536000, includeSubDomains: true }
-    : false,
+  hsts: isHttps ? { maxAge: 31536000, includeSubDomains: true } : false,
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      // Remove upgrade-insecure-requests on HTTP — it breaks asset loading
+      'upgrade-insecure-requests': isHttps ? [] : null,
+    },
+  },
 }));
 
 // Restrict CORS to known origins

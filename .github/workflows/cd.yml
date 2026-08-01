@@ -16,20 +16,22 @@ permissions:
   contents: read
 
 # ── Repo-level variables (set in GitHub → Settings → Variables → Actions) ─────
-# AWS_REGION          e.g. ap-south-1
-# ECR_REPOSITORY      e.g. quizforge
-# ECS_CLUSTER         e.g. quizforge-cluster
-# ECS_SERVICE         e.g. quizforge-service
-# CONTAINER_NAME      e.g. quizforge-backend   (must match name in task definition)
+# AWS_REGION            e.g. ap-northeast-1
+# ECR_REPOSITORY        e.g. quizforge
+# ECS_CLUSTER           e.g. quizforge-cluster
+# ECS_SERVICE           e.g. quizforge-service          (exact ECS service name)
+# ECS_TASK_DEFINITION   e.g. quizforge-service          (task definition family name — often same as service but not always)
+# CONTAINER_NAME        e.g. quizforge-backend          (must match name in task definition)
 #
 # ── Repo-level secrets (Settings → Secrets → Actions) ────────────────────────
-# AWS_ROLE_ARN        e.g. arn:aws:iam::123456789012:role/github-actions-quizforge
+# AWS_ROLE_ARN          e.g. arn:aws:iam::123456789012:role/github-actions-quizforge
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
   ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
   ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+  ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
   CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
 
 jobs:
@@ -110,7 +112,7 @@ jobs:
       - name: Download current ECS task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_SERVICE }} \
+            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
             --query taskDefinition \
             > task-definition.json
 

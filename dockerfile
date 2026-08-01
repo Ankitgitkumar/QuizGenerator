@@ -48,8 +48,8 @@ USER appuser
 
 EXPOSE 3141
 
-# Healthcheck so ECS knows the container is healthy
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:3141/health || exit 1
+# Healthcheck — uses $PORT (set via ECS env var) or falls back to 3141
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://localhost:${PORT:-3141}/health || exit 1
 
 CMD ["node", "index.js"]

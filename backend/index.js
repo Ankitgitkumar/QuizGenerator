@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from "dotenv";
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import logger from './utils/logger.js';
 import { startRagWorker } from './workers/ragWorker.js';
@@ -40,13 +44,8 @@ const app = express();
 const isHttps = process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true';
 app.use(helmet({
   hsts: isHttps ? { maxAge: 31536000, includeSubDomains: true } : false,
-  contentSecurityPolicy: {
-    directives: {
-      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      // Remove upgrade-insecure-requests on HTTP — it breaks asset loading
-      'upgrade-insecure-requests': isHttps ? [] : null,
-    },
-  },
+  // Disable CSP entirely on plain HTTP — re-enable once behind HTTPS/ALB
+  contentSecurityPolicy: false,
 }));
 
 // Restrict CORS to known origins
@@ -65,7 +64,9 @@ app.use(cors({
 
 // ─── General Middleware ───────────────────────────────────────────────────────
 
-app.use(express.static("public"));
+// Serve built frontend — use absolute path (required for ESM, relative paths
+// resolve from CWD which may differ between local and container environments)
+app.use(express.static(path.join(__dirname, 'public')));
 // Parse JSON and form bodies FIRST so req.body is populated for sanitization
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

@@ -25,6 +25,7 @@ import AvailableQuizzes from './components/Student/AvailableQuizzes.jsx'
 import PreviousAttempts from './components/Student/PreviousAttempts.jsx'
 import QuizAttempt from './components/Student/PracticeQuizAttempt.jsx'
 import PracticeQuizReview from './components/Student/PracticeQuizReview.jsx'
+import StudentLeaderboard from './components/Student/StudentLeaderboard.jsx'
 
 import Footer from './components/Footer/Footer.jsx'
 import Signup from './components/register/Signup.jsx'
@@ -55,6 +56,7 @@ function App() {
 
         <Route path="/student/quiz/attempt/:quizid" element={<QuizAttempt />} />
         <Route path="/student/quiz/attempt/:quizid/review" element={<PracticeQuizReview />} />
+        <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
 
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />

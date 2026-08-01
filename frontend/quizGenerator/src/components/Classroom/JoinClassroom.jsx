@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const JoinClassroom = ({ studentId, onJoined }) => {
   const [code, setCode] = useState("");
@@ -13,7 +14,7 @@ const JoinClassroom = ({ studentId, onJoined }) => {
     setError("");
     setSuccess("");
     try {
-      const res = await axios.post("https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/join", { code, studentId });
+      const res = await axios.post(`${API_BASE_URL}/classroom/join`, { code, studentId });
       setSuccess("Joined classroom!");
       setCode("");
       if (onJoined) onJoined(res.data.classroom);

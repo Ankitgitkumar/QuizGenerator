@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config/api";
 
 const PreviousAttempts = () => {
   const [attemptedQuizzes, setAttemptedQuizzes] = useState([]);
@@ -12,7 +13,7 @@ const PreviousAttempts = () => {
         const token = localStorage.getItem("studentToken");
 
         const res = await axios.get(
-          "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/previous",
+          `${API_BASE_URL}/student/quizzes/previous`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

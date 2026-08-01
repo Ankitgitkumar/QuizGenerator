@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const AssignQuiz = ({ classroomId, quizzes, onAssigned }) => {
   const [selectedQuiz, setSelectedQuiz] = useState("");
@@ -13,7 +14,7 @@ const AssignQuiz = ({ classroomId, quizzes, onAssigned }) => {
     setError("");
     setSuccess("");
     try {
-      await axios.post("https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/assign-quiz", { classroomId, quizId: selectedQuiz });
+      await axios.post(`${API_BASE_URL}/classroom/assign-quiz`, { classroomId, quizId: selectedQuiz });
       setSuccess("Quiz assigned!");
       if (onAssigned) onAssigned(selectedQuiz);
     } catch (err) {

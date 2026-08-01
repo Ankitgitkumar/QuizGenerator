@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const QuizResults = () => {
   const { id } = useParams();
@@ -18,7 +19,7 @@ const QuizResults = () => {
       }
 
       try {
-        const res = await axios.get(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quiz/${id}/results`, {
+        const res = await axios.get(`${API_BASE_URL}/teacher/quiz/${id}/results`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

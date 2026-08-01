@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const ClassroomList = ({ userId, role }) => {
   const [classrooms, setClassrooms] = useState([]);
@@ -12,8 +13,8 @@ const ClassroomList = ({ userId, role }) => {
       setError("");
       try {
         let url = "";
-      if (role === "teacher") url = `https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/teacher/${userId}`;
-      else url = `https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/student/${userId}`;
+      if (role === "teacher") url = `${API_BASE_URL}/classroom/teacher/${userId}`;
+      else url = `${API_BASE_URL}/classroom/student/${userId}`;
       const res = await axios.get(url);
         setClassrooms(Array.isArray(res.data) ? res.data : [res.data]);
       } catch (err) {

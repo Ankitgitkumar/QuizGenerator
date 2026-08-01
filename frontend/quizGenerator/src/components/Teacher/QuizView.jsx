@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
+import { API_BASE_URL } from "../../config/api";
 
 const QuizView = () => {
   const { id } = useParams(); 
@@ -50,7 +52,7 @@ const QuizView = () => {
 
       try {
         // Fetch quiz details
-        const res = await axios.get(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/${id}`, {
+        const res = await axios.get(`${API_BASE_URL}/teacher/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -68,12 +70,12 @@ const QuizView = () => {
         setEditQuizMode(!fetchedQuiz.isScheduled);
 
         // Fetch teacher classrooms for assignment
-        const meRes = await axios.get('https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/me', {
+        const meRes = await axios.get(`${API_BASE_URL}/teacher/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const teacherId = meRes.data._id;
-        const classroomRes = await axios.get(`https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/teacher/${teacherId}`, {
+        const classroomRes = await axios.get(`${API_BASE_URL}/classroom/teacher/${teacherId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -107,8 +109,8 @@ const QuizView = () => {
   };
 
   const handleSaveQuizDetails = async () => {
-    if (!token) { alert("Please log in to save changes."); navigate('/signin'); return; }
-    if (quiz.isScheduled) { alert("Cannot edit quiz details once it has been scheduled."); return; }
+    if (!token) { toast.error("Please log in to save changes."); navigate('/signin'); return; }
+    if (quiz.isScheduled) { toast.error("Cannot edit quiz details once it has been scheduled."); return; }
 
     try {
       const updateData = {
@@ -116,23 +118,23 @@ const QuizView = () => {
         topic: quizFormData.topic,
         duration: parseInt(quizFormData.duration),
       };
-      await axios.patch(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quiz/${id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
-      alert("Quiz details updated successfully!");
+      await axios.patch(`${API_BASE_URL}/teacher/quiz/${id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success("Quiz details updated successfully!");
       setQuiz(prev => ({ ...prev, ...updateData }));
       setEditQuizMode(false);
     } catch (err) {
       console.error("Failed to update quiz details:", err);
-      alert(`Failed to update quiz details: ${err.response?.data?.message || err.message}`);
+      toast.error(`Failed to update quiz details: ${err.response?.data?.message || err.message}`);
     }
   };
 
   const handleAssignQuiz = async () => {
-    if (!token) { alert("Please log in to assign quizzes."); navigate('/signin'); return; }
-    if (!selectedClassroom) { alert("Select a classroom first."); return; }
+    if (!token) { toast.error("Please log in to assign quizzes."); navigate('/signin'); return; }
+    if (!selectedClassroom) { toast.error("Select a classroom first."); return; }
 
     try {
       await axios.post(
-        "https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/assign-quiz",
+        `${API_BASE_URL}/classroom/assign-quiz`,
         { classroomId: selectedClassroom, quizId: id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -145,18 +147,18 @@ const QuizView = () => {
   };
 
   const handleScheduleQuiz = async () => {
-    if (!token) { alert("Please log in to schedule the quiz."); navigate('/signin'); return; }
-    if (!quizFormData.scheduleAt) { alert("Please select a date and time to schedule the quiz."); return; }
+    if (!token) { toast.error("Please log in to schedule the quiz."); navigate('/signin'); return; }
+    if (!quizFormData.scheduleAt) { toast.error("Please select a date and time to schedule the quiz."); return; }
 
     try {
-        await axios.patch(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quiz/${id}/schedule`, { scheduleAt: quizFormData.scheduleAt }, { headers: { Authorization: `Bearer ${token}` } });
-        alert("Quiz scheduled successfully!");
+        await axios.patch(`${API_BASE_URL}/teacher/quiz/${id}/schedule`, { scheduleAt: quizFormData.scheduleAt }, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success("Quiz scheduled successfully!");
         setQuiz(prev => ({ ...prev, scheduleAt: new Date(quizFormData.scheduleAt), isScheduled: true }));
         setQuizFormData(prev => ({ ...prev, isScheduled: true }));
         setEditQuizMode(false);
     } catch (err) {
         console.error("Failed to schedule quiz:", err);
-        alert(`Failed to schedule quiz: ${err.response?.data?.message || err.message}`);
+        toast.error(`Failed to schedule quiz: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -196,8 +198,8 @@ const QuizView = () => {
   };
 
   const handleSaveQuestion = async () => {
-    if (!token) { alert("Please log in to save question."); navigate('/signin'); return; }
-    if (!editingQuestionId) { alert("No question selected for editing."); return; }
+    if (!token) { toast.error("Please log in to save question."); navigate('/signin'); return; }
+    if (!editingQuestionId) { toast.error("No question selected for editing."); return; }
 
     try {
         const dataToSend = {
@@ -208,25 +210,25 @@ const QuizView = () => {
         // Basic validation before sending
         if (dataToSend.type === 'mcq') {
             if (dataToSend.options.length < 2 || dataToSend.options.some(opt => opt.trim() === '')) {
-                alert("MCQ questions must have at least two non-empty options.");
+                toast.error("MCQ questions must have at least two non-empty options.");
                 return;
             }
             if (!dataToSend.options.includes(dataToSend.correctAnswer)) {
-                alert("Correct answer for MCQ must be one of the provided options.");
+                toast.error("Correct answer for MCQ must be one of the provided options.");
                 return;
             }
         } else if (dataToSend.type === 'one-line') {
             if (dataToSend.correctAnswer.trim() === '') {
-                alert("One-line questions must have a correct answer.");
+                toast.error("One-line questions must have a correct answer.");
                 return;
             }
         }
 
-        const res = await axios.patch(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/question/${editingQuestionId}`, dataToSend, {
+        const res = await axios.patch(`${API_BASE_URL}/teacher/question/${editingQuestionId}`, dataToSend, {
             headers: { Authorization: `Bearer ${token}` }
         });
 
-        alert("Question updated successfully!");
+        toast.success("Question updated successfully!");
         // Update the quiz state with the modified question
         setQuiz(prevQuiz => ({
             ...prevQuiz,
@@ -237,7 +239,7 @@ const QuizView = () => {
         setEditingQuestionId(null); // Exit edit mode for this question
     } catch (err) {
         console.error("Failed to update question:", err);
-        alert(`Failed to update question: ${err.response?.data?.message || err.message}`);
+        toast.error(`Failed to update question: ${err.response?.data?.message || err.message}`);
     }
   };
 

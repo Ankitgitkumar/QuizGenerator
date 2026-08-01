@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; 
 import CreateClassroom from "../Classroom/CreateClassroom";
+import { API_BASE_URL } from "../../config/api";
+import { getFriendlyErrorMessage, logoutUser } from '../../utils/auth';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -25,7 +27,7 @@ const Dashboard = () => {
 
             try {
                 
-                const response = await axios.get('https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/me', {
+                const response = await axios.get(`${API_BASE_URL}/teacher/me`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -36,13 +38,11 @@ const Dashboard = () => {
                 setLoading(false);
 
             } catch (err) {
-                console.error("Error fetching teacher profile:", err);
-                setError("Failed to load teacher profile.");
+                setError(getFriendlyErrorMessage(err, 'Failed to load teacher profile.'));
                 setLoading(false);
                 
                 if (err.response && err.response.status === 401) {
-                    localStorage.removeItem("teacherToken"); 
-                    navigate('/signin'); 
+                    logoutUser(navigate, '/signin');
                 }
                 
             }
@@ -73,9 +73,17 @@ const Dashboard = () => {
     return (
         <div className="min-h-screen">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 z-10 relative">
-                <h1 className="text-3xl font-bold text-white z-10 relative mb-8 ">
-                    Welcome, {teacherName} 👋
-                </h1>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+                    <h1 className="text-3xl font-bold text-white z-10 relative">
+                        Welcome, {teacherName} 👋
+                    </h1>
+                    <button
+                        onClick={() => logoutUser(navigate, '/')}
+                        className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-gray-200 transition hover:bg-white/10"
+                    >
+                        Logout
+                    </button>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 z-10 gap-6">
                     {/* Classroom Card */}

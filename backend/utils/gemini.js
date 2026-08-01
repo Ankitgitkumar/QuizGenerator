@@ -1,147 +1,101 @@
+// utils/gemini.js
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
+import logger from "./logger.js";
 
 dotenv.config();
 
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY is missing in .env");
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
-export const generateQuizFromText = async (text, numberOfQuestions = 5) => {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-  const prompt = `
-    Generate ${numberOfQuestions} quiz questions from this content:
-    "${text}"
-
-    For each question, specify:
-    - type: "mcq" or "one-line"
-    - question: string
-    - options: array of strings (for mcq type only, at least 3 and at most 5 options)
-    - correctAnswer: string (the exact correct answer from the options for mcq, or the direct answer for one-line)
-
-    The output MUST be a JSON array. DO NOT include any additional text, markdown formatting (like \`\`\`json\` or \`\`\`\`), or conversational filler outside of the JSON array.
-    Strictly adhere to the following JSON array format:
-
-    [
-      {
-        "type": "mcq",
-        "question": "What is...",
-        "options": ["A", "B", "C", "D"],
-        "correctAnswer": "B"
-      },
-      {
-        "type": "one-line",
-        "question": "Define ...",
-        "correctAnswer": "..."
-      }
-    ]
-  `;
-
+export async function generateQuiz(text, numberOfQuestions) {
   try {
-    const result = await model.generateContent(prompt);
-    let textResponse = result.response.text();
-
-    console.log("Raw AI Response");
-    console.log(textResponse);
-
-    // Remove leading and trailing markdown code block delimiters
-    // This regex handles '```json' at the start and '```' at the end,
-    // even if there are newlines around them.
-    textResponse = textResponse.replace(/^```json\s*\n?/, '').replace(/\n?```$/, '');
-
-    // Trim any remaining whitespace from the start/end
-    textResponse = textResponse.trim();
-
-    
-    console.log(textResponse);
-
-    const questions = JSON.parse(textResponse);
-    return questions;
-
-  } catch (e) {
-    console.error("Error in generateQuizFromText:", e);
-
-    const statusCode = e?.response?.status || e?.status || (e?.message && e.message.match(/\b(\d{3})\b/)?.[1]);
-
-    if (statusCode === 403) {
-      throw new Error(
-        "AI key error: access forbidden (403). Your API key may have been revoked or leaked. Create a new Gemini API key and set GEMINI_API_KEY in your .env file."
-      );
+    if (!text || !text.trim()) {
+      throw new Error("Empty content received");
     }
 
-    if (e instanceof SyntaxError) {
-      throw new Error(`Failed to parse AI response as JSON. Check AI output for formatting issues. Raw content (after cleaning attempt): "${textResponse}"`);
-    } else {
-      throw new Error(`Failed to generate quiz from AI: ${e.message}`);
+    if (!numberOfQuestions || Number(numberOfQuestions) <= 0) {
+      throw new Error("Invalid number of questions");
     }
+
+    // Prevent extremely large prompts
+    const trimmedText = text.length > 30000 ? text.slice(0, 30000) : text;
+
+    logger.info("Generating quiz with Gemini", {
+      model: MODEL,
+      contentLength: trimmedText.length,
+      numberOfQuestions,
+    });
+
+    const model = genAI.getGenerativeModel({ model: MODEL });
+
+    const prompt = `
+Generate exactly ${numberOfQuestions} quiz questions from the content below.
+
+Rules:
+1. Return ONLY a JSON array.
+2. No markdown.
+3. No explanation text.
+4. Each question must be either:
+   - mcq
+   - one-line
+5. For mcq include exactly 4 options.
+
+Example:
+
+[
+  {
+    "type":"mcq",
+    "question":"What is Java?",
+    "options":["A","B","C","D"],
+    "correctAnswer":"A"
+  },
+  {
+    "type":"one-line",
+    "question":"What is OOP?",
+    "correctAnswer":"Object Oriented Programming"
   }
-};
+]
 
+Content:
+${trimmedText}
+`;
 
-// import { GoogleGenerativeAI } from "@google/generative-ai";
-// import dotenv from "dotenv";
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const raw = response.text();
 
-// dotenv.config();
+    logger.debug("Gemini response preview", { preview: raw.substring(0, 300) });
 
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    let cleaned = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
 
-// export const generateQuizFromText = async (text, numberOfQuestions = 5) => {
-//   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    if (!jsonMatch) {
+      throw new Error("No valid JSON array found in Gemini response");
+    }
 
-//   const prompt = `
-//   Generate ${numberOfQuestions} quiz questions from this content:
-//   "${text}"
+    const questions = JSON.parse(jsonMatch[0]);
 
-//   The output must be a single JSON array of question objects.
-//   Each question object should have the following keys:
-//   - type: "mcq" or "one-line"
-//   - question: a string containing the question text
-//   - options: an array of strings (for mcq type only, with 3-5 options)
-//   - correctAnswer: a string (the exact correct answer)
+    if (!Array.isArray(questions) || questions.length === 0) {
+      throw new Error("Gemini returned an empty question list");
+    }
 
-//   The JSON array should adhere strictly to this format:
-  
-//   [
-//     {
-//       "type": "mcq",
-//       "question": "What is...",
-//       "options": ["A", "B", "C", "D"],
-//       "correctAnswer": "B"
-//     },
-//     {
-//       "type": "one-line",
-//       "question": "Define ...",
-//       "correctAnswer": "..."
-//     }
-//   ]
-  
-//   Please ensure the entire response is a valid JSON array, and nothing else.
-//   `;
+    logger.info("Quiz generation complete", { questionCount: questions.length });
+    return questions;
+  } catch (error) {
+    logger.error("Gemini Generation Error", {
+      message: error.message,
+      details: error.errorDetails,
+    });
+    throw new Error(`Failed to generate quiz from AI: ${error.message || "Unknown error"}`);
+  }
+}
 
-//   try {
-//     const result = await model.generateContent(prompt);
-//     let textResponse = result.response.text();
-
-//     console.log("Raw AI Response:");
-//     console.log(textResponse);
-
-//     // The model might wrap the JSON in markdown; this handles it.
-//     textResponse = textResponse.replace(/^```json\s*\n?/, '').replace(/\n?```$/, '');
-//     textResponse = textResponse.trim();
-
-//     console.log("Cleaned AI Response:");
-//     console.log(textResponse);
-
-//     const questions = JSON.parse(textResponse);
-//     return questions;
-
-//   } catch (e) {
-//     console.error("Error in generateQuizFromText:", e);
-//     // Log the raw and cleaned content for better debugging.
-//     if (e instanceof SyntaxError) {
-//       throw new Error(`Failed to parse AI response as JSON. Raw content (after cleaning): "${textResponse}"`);
-//     } else {
-//       throw new Error(`Failed to generate quiz from AI: ${e.message}`);
-//     }
-//   }
-// };
+export async function generateQuizFromText(text, numberOfQuestions) {
+  return generateQuiz(text, numberOfQuestions);
+}

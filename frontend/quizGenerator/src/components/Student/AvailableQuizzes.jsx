@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const PracticeQuizzes = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const PracticeQuizzes = () => {
     const fetchQuizzes = async () => {
       try {
         const res = await axios.get(
-          "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/practice",
+          `${API_BASE_URL}/student/quizzes/practice`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -1,0 +1,156 @@
+name: CD — Build, Push to ECR, Deploy to ECS
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:  # allow manual trigger from GitHub UI
+
+# Cancel any in-flight deployment when a newer push arrives
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false  # never cancel an in-progress deploy — let it finish
+
+# ── Permissions for OIDC (no long-lived AWS keys) ─────────────────────────────
+permissions:
+  id-token: write   # needed to request the JWT from GitHub's OIDC provider
+  contents: read
+
+# ── Repo-level variables (set in GitHub → Settings → Variables → Actions) ─────
+# AWS_REGION          e.g. ap-south-1
+# ECR_REPOSITORY      e.g. quizforge
+# ECS_CLUSTER         e.g. quizforge-cluster
+# ECS_SERVICE         e.g. quizforge-service
+# CONTAINER_NAME      e.g. quizforge-backend   (must match name in task definition)
+#
+# ── Repo-level secrets (Settings → Secrets → Actions) ────────────────────────
+# AWS_ROLE_ARN        e.g. arn:aws:iam::123456789012:role/github-actions-quizforge
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+  CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
+
+jobs:
+  # ── Build Docker image & push to ECR ────────────────────────────────────────
+  build-and-push:
+    name: Build & Push to ECR
+    runs-on: ubuntu-latest
+    outputs:
+      image_uri: ${{ steps.build-push.outputs.image_uri }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Authenticate to AWS via OIDC — no AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY needed
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image to ECR
+        id: build-push
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build with two tags: immutable SHA tag + latest
+          IMAGE_URI="$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          LATEST_URI="$REGISTRY/$ECR_REPOSITORY:latest"
+
+          docker buildx build \
+            --platform linux/amd64 \
+            --cache-from type=gha \
+            --cache-to   type=gha,mode=max \
+            --tag "$IMAGE_URI" \
+            --tag "$LATEST_URI" \
+            --push \
+            .
+
+          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+
+      - name: Print image info
+        run: |
+          echo "### Docker Image Pushed to ECR 🐳" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Registry | \`${{ steps.ecr-login.outputs.registry }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Repository | \`${{ env.ECR_REPOSITORY }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| SHA Tag | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Full URI | \`${{ steps.build-push.outputs.image_uri }}\` |" >> $GITHUB_STEP_SUMMARY
+
+  # ── Deploy new image to ECS Fargate ─────────────────────────────────────────
+  deploy-ecs:
+    name: Deploy to ECS Fargate
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: production  # enables optional manual approval gate in GitHub
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Download the currently active task definition from ECS
+      - name: Download current ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_SERVICE }} \
+            --query taskDefinition \
+            > task-definition.json
+
+      # Inject the new image URI into the downloaded task definition
+      - name: Render new task definition with updated image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ needs.build-and-push.outputs.image_uri }}
+
+      # Register the new task definition revision and update the ECS service
+      - name: Deploy to ECS service
+        id: deploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          # Wait for service to become stable (all tasks running new revision)
+          wait-for-service-stability: true
+
+      - name: Print deployment summary
+        if: success()
+        run: |
+          echo "### Deployment Successful 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Cluster | \`${{ env.ECS_CLUSTER }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | \`${{ env.ECS_SERVICE }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image | \`${{ needs.build-and-push.outputs.image_uri }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered by | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "### ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+          echo "ECS did not reach a stable state. Check the ECS Events tab." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**To rollback**, re-run the previous successful deployment from the GitHub Actions history," >> $GITHUB_STEP_SUMMARY
+          echo "or update the ECS service to use the previous task definition revision via the AWS console." >> $GITHUB_STEP_SUMMARY

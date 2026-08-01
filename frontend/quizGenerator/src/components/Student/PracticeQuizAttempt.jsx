@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
+import { API_BASE_URL } from "../../config/api";
 
 const QuizAttempt = () => {
   const { quizid } = useParams();
@@ -29,8 +31,8 @@ const QuizAttempt = () => {
 
         const url =
           quizType === "practice"
-            ? "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/practice/attempt"
-            : "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/attempt";
+            ? `${API_BASE_URL}/student/quizzes/practice/attempt`
+            : `${API_BASE_URL}/student/quizzes/attempt`;
 
         const res = await axios.post(
           url,
@@ -45,7 +47,7 @@ const QuizAttempt = () => {
         setQuestions(res.data.Questions || []);
       } catch (err) {
         console.error("Fetch quiz error:", err.response?.data || err.message);
-        alert(err.response?.data?.error || err.response?.data || "Failed to load quiz.");
+        toast.error(err.response?.data?.error || err.response?.data || "Failed to load quiz.");
         navigate("/student/dashboard");
       } finally {
         setLoading(false);
@@ -109,7 +111,7 @@ const QuizAttempt = () => {
     const token = localStorage.getItem("studentToken");
 
     const res = await axios.post(
-      "https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/submit",
+      `${API_BASE_URL}/student/quizzes/submit`,
       {
         quizId: quizid,
         responses,
@@ -135,7 +137,7 @@ const QuizAttempt = () => {
     });
   } catch (err) {
     console.error("Submit quiz error:", err.response?.data || err.message);
-    alert(err.response?.data?.error || "Failed to submit quiz. Please try again.");
+    toast.error(err.response?.data?.error || "Failed to submit quiz. Please try again.");
   } finally {
     setSubmitting(false);
   }

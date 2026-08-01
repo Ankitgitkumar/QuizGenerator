@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from "../../config/api";
 
 const MyQuizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -11,7 +12,7 @@ const MyQuizzes = () => {
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        const res = await axios.get('https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quizzes', {
+        const res = await axios.get(`${API_BASE_URL}/teacher/quizzes`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -29,7 +30,7 @@ const MyQuizzes = () => {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`https://quizgenerator-backend-vafs.onrender.com/api/v1/teacher/quiz/${id}`, {
+      await axios.delete(`${API_BASE_URL}/teacher/quiz/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

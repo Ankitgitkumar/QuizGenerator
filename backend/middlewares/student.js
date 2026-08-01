@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-const JWT_STUDENT_PASSWORD = "student_password_jwt";
+const JWT_STUDENT_PASSWORD = process.env.JWT_STUDENT_PASSWORD || "student_password_jwt";
 
 function studentMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;

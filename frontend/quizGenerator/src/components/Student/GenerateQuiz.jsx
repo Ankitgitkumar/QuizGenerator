@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { API_BASE_URL } from "../../config/api";
 
 const GenerateQuiz = () => {
   const [topic, setTopic] = useState('');
@@ -18,7 +20,7 @@ const navigate = useNavigate();
 
   const token = localStorage.getItem("studentToken");
 
-  const res = await fetch("https://quizgenerator-backend-vafs.onrender.com/api/v1/student/quizzes/create", {
+  const res = await fetch(`${API_BASE_URL}/student/quizzes/create`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -31,13 +33,13 @@ const navigate = useNavigate();
   setLoading(false);
 
   if (!res.ok) {
-    alert(data.error || "Something went wrong");
+    toast.error(data.error || "Something went wrong");
     return;
   }
 
 
 
-  alert("Quiz Created Successfully!");
+  toast.success("Quiz created successfully!");
   navigate(`/student/quiz/attempt/${data.quizId}`, {
   state: { type: "practice" },
 });

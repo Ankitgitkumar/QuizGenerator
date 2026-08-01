@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const CreateClassroom = ({ teacherId, onCreated }) => {
   const [name, setName] = useState("");
@@ -17,7 +18,7 @@ const CreateClassroom = ({ teacherId, onCreated }) => {
     try {
       const payload = { name, teacherId };
       if (code.trim()) payload.code = code.trim();
-      const res = await axios.post("https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/create", payload);
+      const res = await axios.post(`${API_BASE_URL}/classroom/create`, payload);
       setSuccess(`Classroom created! Code: ${res.data.code}`);
       setName("");
       setCode("");

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const StudentClassroom = () => {
   const [classroom, setClassroom] = useState(null);
@@ -18,7 +19,7 @@ const StudentClassroom = () => {
       }
 
       try {
-        const res = await axios.get("https://quizgenerator-backend-vafs.onrender.com/api/v1/classroom/me", {
+        const res = await axios.get(`${API_BASE_URL}/classroom/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

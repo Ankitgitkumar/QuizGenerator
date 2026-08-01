@@ -34,7 +34,13 @@ const app = express();
 // ─── Security Middleware ──────────────────────────────────────────────────────
 
 // Sets secure HTTP headers (XSS, clickjacking, MIME sniffing, etc.)
-app.use(helmet());
+// Disable HSTS when running on plain HTTP (no SSL termination) to avoid
+// the browser force-upgrading requests to https:// and breaking asset loads.
+app.use(helmet({
+  hsts: process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true'
+    ? { maxAge: 31536000, includeSubDomains: true }
+    : false,
+}));
 
 // Restrict CORS to known origins
 app.use(cors({

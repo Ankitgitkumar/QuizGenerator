@@ -1,2 +1,4 @@
 # .env
 # .github/copilot-instructions.md
+# Frontend build output — never commit, always built fresh in Docker
+public/

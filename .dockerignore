@@ -1,2 +1,4 @@
 .env
 node_modules
+# Frontend build artifacts committed to backend — always built fresh in Docker
+backend/public

@@ -7,7 +7,8 @@ WORKDIR /app
 # Copy only manifests first for better layer caching
 COPY ./frontend/quizGenerator/package*.json ./
 
-RUN npm ci --omit=dev
+# Install ALL deps (including devDeps) — Vite plugins are needed at build time
+RUN npm ci
 
 COPY ./frontend/quizGenerator .
 

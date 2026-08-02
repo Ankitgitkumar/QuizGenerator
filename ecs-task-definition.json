@@ -13,14 +13,14 @@
       "essential": true,
       "portMappings": [
         {
-          "containerPort": 3141,
-          "hostPort": 3141,
+          "containerPort": 3000,
+          "hostPort": 3000,
           "protocol": "tcp"
         }
       ],
       "environment": [
         { "name": "NODE_ENV",                "value": "production" },
-        { "name": "PORT",                    "value": "3141" },
+        { "name": "PORT",                    "value": "3000" },
         { "name": "GEMINI_MODEL",            "value": "gemini-2.5-flash" },
         { "name": "GEMINI_EMBEDDING_MODEL",  "value": "gemini-embedding-001" },
         { "name": "PINECONE_INDEX_NAME",     "value": "quiz-knowledge" },
@@ -65,7 +65,7 @@
       "healthCheck": {
         "command": [
           "CMD-SHELL",
-          "wget -qO- http://localhost:3141/health || exit 1"
+          "wget -qO- http://localhost:3000/health || exit 1"
         ],
         "interval": 30,
         "timeout": 5,

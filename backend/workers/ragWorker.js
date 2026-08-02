@@ -120,8 +120,7 @@ export async function startRagWorker() {
   const conn = getRedisConfig();
   try {
     const testClient = new Redis({
-      host: conn.host,
-      port: conn.port,
+      ...conn,   // spreads host, port, and tls:{} when using rediss://
       lazyConnect: true,
       maxRetriesPerRequest: 0,
       enableOfflineQueue: false,

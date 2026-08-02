@@ -11,9 +11,12 @@ export function getRedisConfig() {
   const url = process.env.REDIS_URL || 'redis://localhost:6379';
   try {
     const parsed = new URL(url);
+    const isTls = parsed.protocol === 'rediss:';
     return {
       host: parsed.hostname || 'localhost',
-      port: parseInt(parsed.port, 10) || 6379,
+      port: parseInt(parsed.port, 10) || (isTls ? 6380 : 6379),
+      // Required for Upstash and other TLS Redis providers (rediss://)
+      ...(isTls && { tls: {} }),
     };
   } catch {
     return { host: 'localhost', port: 6379 };

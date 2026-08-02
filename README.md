@@ -391,6 +391,4 @@ Monitor live progress: **ECS → Clusters → quizforge-cluster → Services →
 
 ---
 
-## 📄 License
 
-MIT

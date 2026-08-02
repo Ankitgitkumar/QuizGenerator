@@ -15,6 +15,9 @@ export function getRedisConfig() {
     return {
       host: parsed.hostname || 'localhost',
       port: parseInt(parsed.port, 10) || (isTls ? 6380 : 6379),
+      // Extract credentials from URL (e.g. rediss://default:PASSWORD@host:port)
+      ...(parsed.password && { password: decodeURIComponent(parsed.password) }),
+      ...(parsed.username && parsed.username !== 'default' && { username: decodeURIComponent(parsed.username) }),
       // Required for Upstash and other TLS Redis providers (rediss://)
       ...(isTls && { tls: {} }),
     };

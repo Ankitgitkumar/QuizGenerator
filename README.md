@@ -18,6 +18,8 @@
 | 🤖 **AI Quiz Generation** | Gemini 2.5 Flash generates MCQ + short answer questions from any topic |
 | 📄 **PDF Ingestion** | Upload a PDF; the system extracts text and generates contextual questions |
 | 🔍 **RAG Pipeline** | Pinecone vector search retrieves the most relevant document chunks before generation |
+| ⚙️ **Async Task Queue** | **BullMQ & Redis** process heavy PDF chunking and embedding in the background |
+| 🏆 **Redis Leaderboard** | Real-time global and classroom leaderboards powered by **Redis Sorted Sets** |
 | 🏫 **Classroom Management** | Teachers create classrooms with join codes; students enroll |
 | ⏰ **Scheduled Quizzes** | Quizzes unlock at a set date/time for all classroom students simultaneously |
 | 🔒 **Role-based Auth** | Separate JWT flows for Teacher and Student roles |
@@ -76,6 +78,7 @@
 | Vector DB | Pinecone | Managed serverless semantic search |
 | Database | MongoDB Atlas | Flexible schema, scales naturally |
 | Cache | Redis (ioredis) | Sub-millisecond reads, distributed |
+| Job Queue | BullMQ | Distributed task queue for asynchronous RAG ingestion |
 | Auth | JSON Web Tokens | Stateless, scalable, no session store |
 | Validation | Zod | Runtime type safety for API inputs |
 | Logging | Winston | Structured JSON logs, log levels |
@@ -93,6 +96,22 @@
 5. **Augmented Generation**: The retrieved chunks are injected into the Gemini prompt as context, grounding the quiz in the actual document content.
 
 **Result**: Questions generated from a "Photosynthesis" PDF will reference the specific content of that PDF — not generic internet knowledge.
+
+---
+
+## ⚡ High-Throughput Redis Leaderboard & Asynchronous Task Queue
+
+### 🏆 Redis-Powered Leaderboards
+Instead of executing heavy MongoDB aggregation queries (`$group`, `$sort`) whenever a student or teacher views the rankings, the system uses **Redis Sorted Sets (ZSET)**. This ensures that leaderboard read and write operations run in **O(log N)** time complexity.
+* **Score Increments**: When a student completes a quiz, their score is atomically updated in the global and classroom-specific ZSETs via `ZINCRBY`.
+* **Instant Ranking Retrieval**: Retrieving a student's rank is performed via `ZREVRANK`, and fetching the top-N list uses `ZREVRANGE ... WITHSCORES` in milliseconds.
+* **Fallback & Enrichment**: If Redis is offline, the system handles it gracefully without breaking. On retrieval, usernames are resolved in bulk from MongoDB to minimize database roundtrips.
+
+### ⚙️ Asynchronous Processing with BullMQ
+To maintain high responsiveness and ensure the Express event loop remains completely unblocked, document processing (PDF parsing, text chunking, and Pinecone upserting) is fully offloaded to **BullMQ** running on Redis:
+* **Decoupled Producers/Consumers**: The API endpoints immediately return a `202 Accepted` status upon PDF upload. The job is queued into Redis.
+* **Reliable Background Execution**: Background workers (`backend/workers/ragWorker.js`) poll jobs and perform the heavy embedding/upsert calculations.
+* **Resiliency**: Built-in exponential backoff retry strategies handle transient network errors (e.g. Pinecone or Gemini API rate limits) without losing user data.
 
 ---
 

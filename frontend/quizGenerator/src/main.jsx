@@ -16,10 +16,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         toastOptions={{
           duration: 3500,
           style: {
-            background: '#1f2937',
-            color: '#f9fafb',
-            borderRadius: '10px',
-            border: '1px solid #374151',
+            background: '#ffffff',
+            color: '#0f172a',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+            fontSize: '14px',
+            fontWeight: '500',
           },
           success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
           error:   { iconTheme: { primary: '#ef4444', secondary: '#fff' } },

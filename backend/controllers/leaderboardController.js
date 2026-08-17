@@ -2,9 +2,9 @@
 
 import models from '../db.js';
 import logger from '../utils/logger.js';
-import { addScore, getTopStudents, getStudentRank } from '../utils/leaderboard.js';
+import { addScore, getTopStudents, getStudentRank, getQuizTopStudents } from '../utils/leaderboard.js';
 
-const { studentModel, classModel } = models;
+const { studentModel, classModel, quizModel } = models;
 
 // ─── POST /api/v1/leaderboard/score ──────────────────────────────────────────
 // Manually award points to the authenticated student.
@@ -87,5 +87,26 @@ export async function getStudentRankHandler(req, res) {
   } catch (err) {
     logger.error('[leaderboard] getStudentRank error', { error: err.message });
     return res.status(500).json({ error: 'Failed to fetch student rank' });
+  }
+}
+
+// ─── GET /api/v1/leaderboard/quiz/:quizId ────────────────────────────────────
+// Returns ranking scores of students specifically for this quiz.
+export async function getQuizLeaderboard(req, res) {
+  try {
+    const { quizId } = req.params;
+    const limit = Math.min(Math.max(parseInt(req.query.limit ?? '50', 10), 1), 100);
+
+    // Verify quiz exists
+    const quiz = await quizModel.findById(quizId).select('_id').lean();
+    if (!quiz) {
+      return res.status(404).json({ error: 'Quiz not found' });
+    }
+
+    const leaders = await getQuizTopStudents(quizId, limit, studentModel);
+    return res.status(200).json({ quizId, limit, leaders });
+  } catch (err) {
+    logger.error('[leaderboard] getQuizLeaderboard error', { error: err.message });
+    return res.status(500).json({ error: 'Failed to fetch quiz leaderboard' });
   }
 }

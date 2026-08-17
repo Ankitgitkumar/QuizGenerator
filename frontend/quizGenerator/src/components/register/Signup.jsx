@@ -65,82 +65,82 @@ function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10">
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8">
-        <h1 className="text-gray-100 font-bold text-3xl sm:text-4xl text-center mb-2">
+    <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10 fade-in">
+      <div className="w-full max-w-md bg-white border border-slate-200/80 rounded-3xl shadow-sm p-6 sm:p-8">
+        <h1 className="text-slate-900 font-extrabold text-3xl text-center mb-2">
           Create Account
         </h1>
-        <p className="text-gray-400 text-center text-sm mb-8">
+        <p className="text-slate-500 text-center text-sm mb-8">
           Already have one?{" "}
-          <Link to="/signin" className="text-blue-400 hover:underline">Sign in</Link>
+          <Link to="/signin" className="text-indigo-600 hover:underline font-semibold">Sign in</Link>
         </p>
 
         <form onSubmit={submitHandler} className="flex flex-col items-center" noValidate>
           <div className="w-full space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="text-gray-300">
-                <label className="text-sm font-medium block mb-1">First Name</label>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 block mb-1.5">First Name</label>
                 <input
                   type="text"
                   value={fN}
                   onChange={(e) => setfN(e.target.value)}
                   placeholder="John"
                   autoComplete="given-name"
-                  className="w-full bg-gray-900/70 text-white border border-gray-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500 transition"
+                  className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 transition"
                 />
               </div>
-              <div className="text-gray-300">
-                <label className="text-sm font-medium block mb-1">Last Name</label>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 block mb-1.5">Last Name</label>
                 <input
                   type="text"
                   value={lN}
                   onChange={(e) => setlN(e.target.value)}
                   placeholder="Doe"
                   autoComplete="family-name"
-                  className="w-full bg-gray-900/70 text-white border border-gray-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500 transition"
+                  className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 transition"
                 />
               </div>
             </div>
 
-            <div className="text-gray-300">
-              <label className="text-sm font-medium block mb-1">Email</label>
+            <div>
+              <label className="text-sm font-semibold text-slate-700 block mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setemail(e.target.value)}
                 placeholder="you@example.com"
                 autoComplete="email"
-                className="w-full bg-gray-900/70 text-white border border-gray-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500 transition"
+                className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 transition"
               />
             </div>
 
-            <div className="text-gray-300">
-              <label className="text-sm font-medium block mb-1">Password</label>
+            <div>
+              <label className="text-sm font-semibold text-slate-700 block mb-1.5">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setpassword(e.target.value)}
                 placeholder="Minimum 6 characters"
                 autoComplete="new-password"
-                className="w-full bg-gray-900/70 text-white border border-gray-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500 transition"
+                className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 transition"
               />
               {password.length > 0 && password.length < 6 && (
-                <p className="text-amber-400 text-xs mt-1">⚠ At least 6 characters required ({password.length}/6)</p>
+                <p className="text-amber-600 text-xs mt-1">⚠ At least 6 characters required ({password.length}/6)</p>
               )}
             </div>
 
-            <div className="text-gray-300">
-              <label className="text-sm font-medium block mb-1">I am a</label>
+            <div>
+              <label className="text-sm font-semibold text-slate-700 block mb-2">I am a</label>
               <div className="grid grid-cols-2 gap-3">
                 {["teacher", "student"].map((r) => (
                   <button
                     key={r}
                     type="button"
                     onClick={() => setrole(r)}
-                    className={`py-3 rounded-xl font-medium capitalize transition border-2 ${
+                    className={`py-3 rounded-xl font-bold capitalize transition border-2 text-sm flex items-center justify-center gap-1.5 cursor-pointer ${
                       role === r
-                        ? "border-blue-500 bg-blue-500/20 text-blue-300"
-                        : "border-gray-700 bg-gray-900/50 text-gray-400 hover:border-gray-500"
+                        ? "border-indigo-600 bg-indigo-50/60 text-indigo-700 shadow-xs"
+                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
                     }`}
                   >
                     {r === "teacher" ? "👨‍🏫 Teacher" : "👨‍🎓 Student"}
@@ -153,7 +153,7 @@ function Signup() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold text-base sm:text-lg shadow-lg hover:scale-[1.02] hover:shadow-blue-500/25 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full mt-8 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-base shadow-sm hover:scale-[1.01] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? (
               <>

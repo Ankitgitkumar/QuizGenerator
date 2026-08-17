@@ -25,6 +25,7 @@ const previousQuizSchema = new Schema({
     default: Date.now,
   },
   score: { type: Number, required: true },
+  disqualified: { type: Boolean, default: false },
 });
 
 // Index: fetch all attempts by a student quickly, sorted by most recent

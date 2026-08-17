@@ -23,11 +23,9 @@ const main = async () => {
 
     console.warn('SDK does not expose listModels/getModels. Trying low-level request...');
     // As a last resort, attempt a raw fetch to the ModelService list endpoint
-    const fetch = (await import('node-fetch')).default;
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
     const r = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${process.env.GEMINI_API_KEY}`,
         'Content-Type': 'application/json'
       }
     });

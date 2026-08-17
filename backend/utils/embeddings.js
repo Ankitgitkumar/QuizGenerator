@@ -47,12 +47,13 @@ export const embedBatch = async (texts = []) => {
       throw new Error("embedBatch expects an array");
     }
 
-    const embeddings = [];
-    for (let i = 0; i < texts.length; i++) {
-      logger.debug(`Generating embedding ${i + 1}/${texts.length}`);
-      const embedding = await embedText(texts[i]);
-      embeddings.push(embedding);
-    }
+    logger.info(`Generating ${texts.length} embeddings in parallel...`);
+    const embeddings = await Promise.all(
+      texts.map((text, i) => {
+        logger.debug(`Queueing embedding ${i + 1}/${texts.length}`);
+        return embedText(text);
+      })
+    );
 
     return embeddings;
   } catch (error) {

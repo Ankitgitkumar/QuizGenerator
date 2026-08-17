@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from "../../config/api";
+import QuizLeaderboardModal from '../Classroom/QuizLeaderboardModal';
 
 const QuizView = () => {
   const { id } = useParams(); 
@@ -13,7 +14,9 @@ const QuizView = () => {
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [editQuizMode, setEditQuizMode] = useState(false); 
+  const [isRescheduling, setIsRescheduling] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState(null); 
   const [questionFormData, setQuestionFormData] = useState({ 
     questionText: '',
@@ -152,13 +155,14 @@ const QuizView = () => {
 
     try {
         await axios.patch(`${API_BASE_URL}/teacher/quiz/${id}/schedule`, { scheduleAt: quizFormData.scheduleAt }, { headers: { Authorization: `Bearer ${token}` } });
-        toast.success("Quiz scheduled successfully!");
+        toast.success(isRescheduling ? "Quiz rescheduled successfully!" : "Quiz scheduled successfully!");
         setQuiz(prev => ({ ...prev, scheduleAt: new Date(quizFormData.scheduleAt), isScheduled: true }));
         setQuizFormData(prev => ({ ...prev, isScheduled: true }));
+        setIsRescheduling(false);
         setEditQuizMode(false);
     } catch (err) {
         console.error("Failed to schedule quiz:", err);
-        toast.error(`Failed to schedule quiz: ${err.response?.data?.message || err.message}`);
+        toast.error(`Failed to schedule/reschedule quiz: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -253,78 +257,152 @@ const QuizView = () => {
     });
   };
 
-  if (loading) return <div className="p-10 text-white text-center text-xl">Loading quiz...</div>;
-  if (error) {
+  if (loading) {
     return (
-      <div className="p-10 bg-gray-900 min-h-screen flex flex-col items-center justify-center">
-        <h2 className="text-2xl text-red-500 mb-4">{error}</h2>
-        <button onClick={() => navigate('/teacher/myquizzes')} className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition duration-300">Back to My Quizzes</button>
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <span className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <p className="font-semibold text-slate-600 text-sm">Loading quiz...</p>
+        </div>
       </div>
     );
   }
-  if (!quiz || !quiz.questions) {
-      return (
-          <div className="p-10 bg-gray-900 min-h-screen text-white text-center text-xl">
-              No quiz data or questions available.
-              <button onClick={() => navigate('/teacher/myquizzes')} className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition duration-300">Back to My Quizzes</button>
-          </div>
-      );
+
+  if (error) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">{error}</h2>
+        <button onClick={() => navigate('/teacher/myquizzes')} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs transition">
+          Back to My Quizzes
+        </button>
+      </div>
+    );
   }
 
+  if (!quiz || !quiz.questions) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+        <h2 className="text-xl font-bold text-slate-700 mb-4">No quiz data or questions available.</h2>
+        <button onClick={() => navigate('/teacher/myquizzes')} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs transition">
+          Back to My Quizzes
+        </button>
+      </div>
+    );
+  }
+
+  const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition text-sm";
+  const labelStyle = "block text-xs font-bold text-slate-700 mb-1.5";
+
   return (
-    <div className="min-h-screen px-6 py-10 bg-gray-900 text-white">
+    <div className="min-h-[calc(100vh-80px)] bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto fade-in">
       {/* Quiz Details / Edit Form */}
-      <div className="mb-8 text-center">
+      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs mb-8">
         {editQuizMode ? (
-            <>
-                <input type="text" name="title" value={quizFormData.title} onChange={handleQuizInputChange} className="text-4xl font-extrabold mb-2 bg-gray-700 text-white p-2 rounded w-full max-w-lg" />
-                <input type="text" name="topic" value={quizFormData.topic} onChange={handleQuizInputChange} className="text-xl text-gray-400 bg-gray-700 p-2 rounded w-full max-w-lg mt-2" />
-                 <input type="number" name="duration" value={quizFormData.duration} onChange={handleQuizInputChange} placeholder="Duration in minutes" className="text-md text-gray-500 bg-gray-700 p-2 rounded w-full max-w-xs mt-2" />
-                <div className="mt-4">
-                    <button onClick={handleSaveQuizDetails} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-300 mr-2">Save Changes</button>
-                    <button onClick={() => setEditQuizMode(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow-md transition duration-300">Cancel</button>
-                </div>
-            </>
+          <div className="space-y-4 max-w-xl mx-auto">
+            <div>
+              <label className={labelStyle}>Quiz Title</label>
+              <input type="text" name="title" value={quizFormData.title} onChange={handleQuizInputChange} className={inputStyle} />
+            </div>
+            <div>
+              <label className={labelStyle}>Topic</label>
+              <input type="text" name="topic" value={quizFormData.topic} onChange={handleQuizInputChange} className={inputStyle} />
+            </div>
+            <div>
+              <label className={labelStyle}>Duration (minutes)</label>
+              <input type="number" name="duration" value={quizFormData.duration} onChange={handleQuizInputChange} placeholder="Duration in minutes" className={inputStyle} />
+            </div>
+            <div className="pt-2 flex gap-3 justify-end">
+              <button onClick={() => setEditQuizMode(false)} className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold rounded-xl transition text-sm cursor-pointer">
+                Cancel
+              </button>
+              <button onClick={handleSaveQuizDetails} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition text-sm cursor-pointer">
+                Save Changes
+              </button>
+            </div>
+          </div>
         ) : (
-            <>
-                <h1 className="text-4xl font-extrabold mb-2">{quiz.title}</h1>
-                <p className="text-xl text-gray-400">Topic: {quiz.topic}</p>
-                <p className="text-md text-gray-500">Created: {new Date(quiz.createdAt).toLocaleString()}</p>
-                {quiz.duration && (<p className="text-md text-gray-500">Duration: {quiz.duration} minutes</p>)}
-                <p className="text-md text-gray-500 mt-2">
-                    Status: {quiz.isScheduled ? (
-                        <span className="text-green-400">Scheduled for {new Date(quiz.scheduleAt).toLocaleString()}</span>
-                    ) : (
-                        <span className="text-red-400">Not Scheduled</span>
+          <div className="text-center max-w-xl mx-auto">
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-2">{quiz.title}</h1>
+            <p className="text-base text-slate-600 font-semibold mb-1">Topic: {quiz.topic}</p>
+            <p className="text-xs text-slate-400 font-medium mb-1">Created: {new Date(quiz.createdAt).toLocaleString()}</p>
+            {quiz.duration && (<p className="text-xs text-slate-400 font-medium mb-4">Duration: {quiz.duration} minutes</p>)}
+            
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-sm font-semibold">
+                Status: {quiz.isScheduled ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-100 text-xs font-bold select-none">
+                      Scheduled for {new Date(quiz.scheduleAt).toLocaleString()}
+                    </span>
+                    {!isRescheduling && (
+                      <button
+                        onClick={() => setIsRescheduling(true)}
+                        className="px-3 py-1 border border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50 font-bold rounded-lg text-xs transition cursor-pointer select-none"
+                      >
+                        Reschedule Test
+                      </button>
                     )}
-                </p>
-                {!quiz.isScheduled && (
-                    <div className="mt-4 flex flex-col items-center">
-                        <label htmlFor="scheduleAt" className="mb-2 text-gray-300">Schedule Date & Time:</label>
-                        <input type="datetime-local" id="scheduleAt" name="scheduleAt" value={quizFormData.scheduleAt} onChange={handleQuizInputChange} className="p-2 rounded bg-gray-700 text-white mb-3" />
-                        <button onClick={handleScheduleQuiz} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition duration-300">Schedule Quiz</button>
-                    </div>
+                  </div>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-100 text-xs font-bold select-none">
+                    Not Scheduled
+                  </span>
                 )}
+              </div>
+
+              {(!quiz.isScheduled || isRescheduling) && (
+                <div className="w-full max-w-xs border border-slate-200 rounded-2xl p-4 bg-slate-50/50 mt-2">
+                  <label htmlFor="scheduleAt" className="block text-xs font-bold text-slate-600 mb-2 text-left">
+                    {isRescheduling ? "Reschedule Date & Time:" : "Schedule Date & Time:"}
+                  </label>
+                  <input type="datetime-local" id="scheduleAt" name="scheduleAt" value={quizFormData.scheduleAt} onChange={handleQuizInputChange} className={`${inputStyle} mb-3`} />
+                  <div className="flex gap-2">
+                    <button onClick={handleScheduleQuiz} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition cursor-pointer shadow-xs">
+                      {isRescheduling ? "Update Schedule" : "Schedule Quiz"}
+                    </button>
+                    {isRescheduling && (
+                      <button 
+                        onClick={() => setIsRescheduling(false)} 
+                        className="px-3 py-2 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold rounded-xl text-xs transition cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2.5 justify-center mt-3">
                 {!quiz.isScheduled && (
-                    <button onClick={() => setEditQuizMode(true)} className="mt-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-lg shadow-md transition duration-300">Edit Details</button>
+                  <button onClick={() => setEditQuizMode(true)} className="px-4 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-xl text-sm transition cursor-pointer">
+                    Edit Title / Details
+                  </button>
                 )}
-            </>
+                <button
+                  onClick={() => setShowLeaderboard(true)}
+                  className="px-4 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-800 font-bold rounded-xl text-sm transition cursor-pointer flex items-center gap-1 shadow-2xs select-none"
+                >
+                  🏆 View Leaderboard
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
       {/* Assign quiz to classroom */}
-      <div className="mb-8 bg-gray-800 p-6 rounded-xl border border-gray-700">
-        <h2 className="text-2xl font-bold mb-3">Assign this quiz to a classroom</h2>
+      <div className="mb-8 bg-white p-6 rounded-2xl border border-slate-200/85 shadow-xs">
+        <h2 className="text-lg font-bold text-slate-800 mb-3">Assign Quiz to Classroom</h2>
         {classrooms.length === 0 ? (
-          <p className="text-gray-400 mb-3">
+          <p className="text-slate-400 text-sm font-medium">
             You don't have any classrooms yet. Create one from your dashboard to assign quizzes.
           </p>
         ) : (
-          <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <select
               value={selectedClassroom}
               onChange={(e) => setSelectedClassroom(e.target.value)}
-              className="w-full md:w-2/3 p-2 rounded bg-gray-700 text-white border border-gray-600"
+              className="w-full sm:w-2/3 p-2.5 rounded-xl bg-white text-slate-900 border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
             >
               <option value="">Select a classroom</option>
               {classrooms.map((c) => (
@@ -335,170 +413,192 @@ const QuizView = () => {
             </select>
             <button
               onClick={handleAssignQuiz}
-              className="w-full md:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold"
+              className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-xs cursor-pointer transition"
             >
               Assign Quiz
             </button>
           </div>
         )}
         {assignStatus && (
-          <p className={`mt-3 ${assignStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-            {assignStatus.message}
+          <p className={`mt-3 text-sm font-bold ${assignStatus.type === 'success' ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {assignStatus.type === 'success' ? '✓' : '⚠'} {assignStatus.message}
           </p>
         )}
       </div>
 
-      <h2 className="text-3xl font-bold mb-6 text-white text-center">Questions</h2>
-      <div className="space-y-8">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-slate-800">Quiz Questions</h2>
+        <span className="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold uppercase">{quiz.questions.length} Items</span>
+      </div>
+
+      <div className="space-y-6">
         {quiz.questions.length === 0 ? (
-            <p className="text-gray-400 text-center text-lg">No questions found for this quiz yet.</p>
+          <p className="text-slate-400 text-center py-6 font-semibold bg-white border border-slate-200 rounded-2xl text-sm">
+            No questions found for this quiz yet.
+          </p>
         ) : (
-            quiz.questions.map((q, index) => (
-                <div key={q._id || index} className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-                    
-                    {editingQuestionId === q._id ? (
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-gray-300 text-sm font-bold mb-2">Question Type:</label>
-                                <select
-                                    name="type"
-                                    value={questionFormData.type}
-                                    onChange={handleQuestionFormChange}
-                                    className="block w-full p-2 bg-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="mcq">Multiple Choice</option>
-                                    <option value="one-line">One Line Answer</option>
-                                </select>
-                            </div>
+          quiz.questions.map((q, index) => (
+            <div key={q._id || index} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+              {editingQuestionId === q._id ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className={labelStyle}>Question Type:</label>
+                    <select
+                      name="type"
+                      value={questionFormData.type}
+                      onChange={handleQuestionFormChange}
+                      className={inputStyle}
+                    >
+                      <option value="mcq">Multiple Choice</option>
+                      <option value="one-line">One Line Answer</option>
+                    </select>
+                  </div>
 
-                            <div>
-                                <label className="block text-gray-300 text-sm font-bold mb-2">Question Text:</label>
-                                <textarea
-                                    name="questionText"
-                                    value={questionFormData.questionText}
-                                    onChange={handleQuestionFormChange}
-                                    className="block w-full p-2 bg-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    rows="3"
-                                />
-                            </div>
+                  <div>
+                    <label className={labelStyle}>Question Text:</label>
+                    <textarea
+                      name="questionText"
+                      value={questionFormData.questionText}
+                      onChange={handleQuestionFormChange}
+                      className={`${inputStyle} resize-none`}
+                      rows="3"
+                    />
+                  </div>
 
-                            {questionFormData.type === 'mcq' && (
-                                <div>
-                                    <label className="block text-gray-300 text-sm font-bold mb-2">Options:</label>
-                                    {questionFormData.options.map((option, optIndex) => (
-                                        <div key={optIndex} className="flex items-center mb-2">
-                                            <input
-                                                type="text"
-                                                name="options"
-                                                value={option}
-                                                onChange={(e) => handleQuestionFormChange(e, optIndex)}
-                                                className="flex-grow p-2 bg-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 mr-2"
-                                                placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
-                                            />
-                                            {questionFormData.options.length > 1 && (
-                                                <button
-                                                    onClick={() => removeOption(optIndex)}
-                                                    className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-md"
-                                                >
-                                                    Remove
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button
-                                        onClick={addOption}
-                                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md mt-2"
-                                    >
-                                        Add Option
-                                    </button>
-                                </div>
+                  {questionFormData.type === 'mcq' && (
+                    <div>
+                      <label className={labelStyle}>Options:</label>
+                      <div className="space-y-2">
+                        {questionFormData.options.map((option, optIndex) => (
+                          <div key={optIndex} className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              name="options"
+                              value={option}
+                              onChange={(e) => handleQuestionFormChange(e, optIndex)}
+                              className="flex-grow bg-white text-slate-900 border border-slate-300 rounded-xl px-3 py-2 outline-none text-sm"
+                              placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
+                            />
+                            {questionFormData.options.length > 1 && (
+                              <button
+                                onClick={() => removeOption(optIndex)}
+                                className="bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 p-2 rounded-xl text-xs font-bold"
+                              >
+                                Remove
+                              </button>
                             )}
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        onClick={addOption}
+                        className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-xl mt-3 text-xs font-bold cursor-pointer"
+                      >
+                        + Add Option
+                      </button>
+                    </div>
+                  )}
 
-                            <div>
-                                <label className="block text-gray-300 text-sm font-bold mb-2">Correct Answer:</label>
-                                {questionFormData.type === 'mcq' ? (
-                                    <select
-                                        name="correctAnswer"
-                                        value={questionFormData.correctAnswer}
-                                        onChange={handleQuestionFormChange}
-                                        className="block w-full p-2 bg-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                        <option value="">Select Correct Option</option>
-                                        {questionFormData.options.map((option, optIndex) => (
-                                            <option key={optIndex} value={option}>{String.fromCharCode(65 + optIndex)}. {option}</option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <input
-                                        type="text"
-                                        name="correctAnswer"
-                                        value={questionFormData.correctAnswer}
-                                        onChange={handleQuestionFormChange}
-                                        className="block w-full p-2 bg-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Enter the correct answer"
-                                    />
-                                )}
-                            </div>
-
-                            <div className="mt-4 flex justify-end space-x-2">
-                                <button
-                                    onClick={handleSaveQuestion}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold"
-                                >
-                                    Save Question
-                                </button>
-                                <button
-                                    onClick={handleCancelQuestionEdit}
-                                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-semibold"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
+                  <div>
+                    <label className={labelStyle}>Correct Answer:</label>
+                    {questionFormData.type === 'mcq' ? (
+                      <select
+                        name="correctAnswer"
+                        value={questionFormData.correctAnswer}
+                        onChange={handleQuestionFormChange}
+                        className={inputStyle}
+                      >
+                        <option value="">Select Correct Option</option>
+                        {questionFormData.options.map((option, optIndex) => (
+                          <option key={optIndex} value={option}>{String.fromCharCode(65 + optIndex)}. {option}</option>
+                        ))}
+                      </select>
                     ) : (
-                        
-                        <>
-                            <h3 className="text-xl font-semibold text-blue-400 mb-4 flex justify-between items-center">
-                                <span>Q{index + 1}: {q.questionText}</span>
-                                {/* Edit Button - only if quiz is NOT scheduled */}
-                                {!quiz.isScheduled && (
-                                    <button
-                                        onClick={() => handleEditQuestionClick(q)}
-                                        className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm ml-4"
-                                    >
-                                        Edit
-                                    </button>
-                                )}
-                            </h3>
-
-                            {q.type === 'mcq' && q.options && q.options.length > 0 && (
-                                <ul className="space-y-3 text-white">
-                                    {q.options.map((opt, i) => (
-                                        <li key={i} className={`px-4 py-2 rounded-lg border-2 ${q.correctAnswer === opt ? 'bg-green-700 border-green-500 text-white font-medium' : 'border-gray-600 hover:bg-gray-700'}`}>
-                                            {String.fromCharCode(65 + i)}. {opt}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-
-                            {q.type === 'one-line' && (
-                                <div className="mt-4 p-4 rounded-lg border-2 border-green-500 bg-green-900 bg-opacity-30 text-white">
-                                    <p className="font-semibold text-lg">Correct Answer:</p>
-                                    <p className="ml-2">{q.correctAnswer}</p>
-                                </div>
-                            )}
-                            {q.type === 'mcq' && (!q.options || q.options.length === 0) && (
-                                <p className="text-red-400">Warning: No options found for this MCQ.</p>
-                            )}
-                        </>
+                      <input
+                        type="text"
+                        name="correctAnswer"
+                        value={questionFormData.correctAnswer}
+                        onChange={handleQuestionFormChange}
+                        className={inputStyle}
+                        placeholder="Enter the correct answer"
+                      />
                     )}
+                  </div>
+
+                  <div className="pt-2 flex justify-end gap-2">
+                    <button
+                      onClick={handleCancelQuestionEdit}
+                      className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold rounded-xl text-xs transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveQuestion}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition cursor-pointer shadow-xs"
+                    >
+                      Save Question
+                    </button>
+                  </div>
                 </div>
-            ))
+              ) : (
+                <>
+                  <div className="flex justify-between items-start gap-4 mb-4">
+                    <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                      Q{index + 1}: {q.questionText}
+                    </h3>
+                    {!quiz.isScheduled && (
+                      <button
+                        onClick={() => handleEditQuestionClick(q)}
+                        className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  {q.type === 'mcq' && q.options && q.options.length > 0 && (
+                    <ul className="space-y-2">
+                      {q.options.map((opt, i) => {
+                        const isCorrect = q.correctAnswer === opt;
+                        return (
+                          <li key={i} className={`px-4 py-2.5 rounded-xl border text-sm transition font-medium ${
+                            isCorrect 
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold' 
+                              : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                          }`}>
+                            {String.fromCharCode(65 + i)}. {opt}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+
+                  {q.type === 'one-line' && (
+                    <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-800 text-sm font-semibold">
+                      Correct Answer: <span className="underline ml-1 font-bold">{q.correctAnswer}</span>
+                    </div>
+                  )}
+
+                  {q.type === 'mcq' && (!q.options || q.options.length === 0) && (
+                    <p className="text-rose-600 text-xs font-bold">⚠ Warning: No options found for this MCQ.</p>
+                  )}
+                </>
+              )}
+            </div>
+          ))
         )}
       </div>
 
-      <button onClick={() => navigate('/teacher/myquizzes')} className="mt-10 px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow-md transition duration-300">Back to My Quizzes</button>
+      <button onClick={() => navigate('/teacher/myquizzes')} className="mt-8 px-6 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl shadow-2xs transition cursor-pointer">
+        ← Back to My Quizzes
+      </button>
+
+      <QuizLeaderboardModal
+        isOpen={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
+        quizId={id}
+        quizTopic={quiz?.topic}
+      />
     </div>
   );
 };

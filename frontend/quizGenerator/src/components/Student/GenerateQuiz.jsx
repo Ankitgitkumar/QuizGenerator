@@ -7,16 +7,19 @@ import { API_BASE_URL } from "../../config/api";
 const GenerateQuiz = () => {
   const [topic, setTopic] = useState('');
   const [pdf, setPdf] = useState(null);
+  const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const [quizGenerated, setQuizGenerated] = useState(false);
-   const [loading, setLoading] = useState(false);
-const navigate = useNavigate();
-   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const formData = new FormData();
-  formData.append("topic", topic);
-  if (pdf) formData.append("pdf", pdf);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("topic", topic);
+    formData.append("numberOfQuestions", numberOfQuestions);
+    if (pdf) formData.append("pdf", pdf);
 
   const token = localStorage.getItem("studentToken");
 
@@ -46,55 +49,102 @@ const navigate = useNavigate();
   setQuizGenerated(true);
 };
 
- if (loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white">Creating Quiz...</div>
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-50 text-slate-800">
+        <div className="flex flex-col items-center gap-3">
+          <span className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <p className="font-semibold text-slate-600 text-sm">Generating Quiz with AI...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen  px-6 py-10">
-      <h2 className="text-2xl font-bold mb-6 text-center">Generate Quiz Using AI</h2>
+    <div className="py-10 px-4 sm:px-6 lg:px-8 max-w-xl mx-auto fade-in bg-slate-50">
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => navigate('/student/practice-quiz')}
+          className="text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 text-sm font-semibold transition cursor-pointer"
+        >
+          ← Back to Practice
+        </button>
+        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">AI Practice Quiz</span>
+      </div>
+
+      <h2 className="text-3xl font-extrabold text-slate-900 text-center mb-8">Generate Quiz Using AI</h2>
 
       {!quizGenerated ? (
         <form
           onSubmit={handleSubmit}
-          className="max-w-xl mx-auto bg-gray-800 p-6 rounded-xl shadow space-y-4"
+          className="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6"
         >
-          <input
-            type="text"
-            placeholder="Topic (e.g. Photosynthesis)"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Topic / Subject</label>
+            <input
+              type="text"
+              placeholder="e.g. Photosynthesis, Trigonometry, World War I"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 transition"
+              required
+            />
+          </div>
 
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={(e) => setPdf(e.target.files[0])}
-            className="w-full"
-          />
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Number of Questions</label>
+            <select
+              value={numberOfQuestions}
+              onChange={(e) => setNumberOfQuestions(parseInt(e.target.value))}
+              className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer transition font-medium"
+            >
+              <option value={5}>5 Questions</option>
+              <option value={10}>10 Questions</option>
+              <option value={15}>15 Questions</option>
+              <option value={20}>20 Questions</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Upload Reference PDF (optional)</label>
+            <div className={`w-full bg-white text-slate-900 border rounded-xl px-4 py-3 cursor-pointer flex items-center gap-3 ${pdf ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-slate-300 hover:border-slate-400"}`}
+              onClick={() => document.getElementById("pdf-input").click()}>
+              <span className="text-lg">{pdf ? "📄" : "📎"}</span>
+              <span className={pdf ? "text-emerald-850 text-sm font-bold truncate max-w-[200px]" : "text-slate-400 text-sm"}>
+                {pdf ? pdf.name : "Click to upload a PDF file"}
+              </span>
+              {pdf && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); setPdf(null); }}
+                  className="ml-auto text-red-650 hover:text-red-700 text-xs font-bold">✕ Remove</button>
+              )}
+            </div>
+            <input id="pdf-input" type="file" accept=".pdf" className="hidden"
+              onChange={(e) => setPdf(e.target.files[0] || null)} />
+          </div>
 
           <button
             type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-xs cursor-pointer text-center text-sm"
           >
             Generate Quiz
           </button>
         </form>
       ) : (
-        <div className="max-w-xl mx-auto text-center mt-10">
-          <h3 className="text-xl font-semibold text-green-600 mb-4">
-            Quiz generated successfully!
+        <div className="bg-white border border-slate-200/80 rounded-3xl p-8 text-center mt-10">
+          <h3 className="text-xl font-bold text-emerald-600 mb-4">
+            ✓ Quiz generated successfully!
           </h3>
           <div className="flex justify-center gap-4">
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+            <button 
+              onClick={() => navigate('/student/practice-quiz/available-quizzes')}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer shadow-xs transition"
+            >
               Start Now
             </button>
-            <button className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">
+            <button 
+              onClick={() => navigate('/student/practice-quiz')}
+              className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-5 py-2.5 rounded-xl font-bold text-sm cursor-pointer shadow-2xs transition"
+            >
               Attempt Later
             </button>
           </div>

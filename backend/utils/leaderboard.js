@@ -15,16 +15,18 @@ import logger from './logger.js';
 
 const GLOBAL_KEY = 'leaderboard:global';
 const classKey   = (classId) => `leaderboard:class:${classId}`;
+const quizKey    = (quizId) => `leaderboard:quiz:${quizId}`;
 
 /**
  * Add `points` to a student's leaderboard score.
- * Updates both the global board and, if provided, the classroom board.
+ * Updates the classroom board and the quiz-specific board.
  *
  * @param {string} studentId
  * @param {number} points         - positive integer (quiz score)
  * @param {string|null} [classId] - optional classroom to also update
+ * @param {string|null} [quizId]  - optional quiz ID to update
  */
-export async function addScore(studentId, points, classId = null) {
+export async function addScore(studentId, points, classId = null, quizId = null) {
   const client = await getRedisClient();
   if (!client) {
     logger.warn('[leaderboard] Redis unavailable – score not recorded', { studentId, points });
@@ -33,11 +35,15 @@ export async function addScore(studentId, points, classId = null) {
 
   try {
     const pipeline = client.pipeline();
-    pipeline.zincrby(GLOBAL_KEY, points, studentId);
+    // Global leaderboard is disabled as per requirements
     if (classId) pipeline.zincrby(classKey(classId), points, studentId);
+    if (quizId) {
+      // Set the student's score for this specific quiz (overwrite with latest attempt score)
+      pipeline.zadd(quizKey(quizId), points, studentId);
+    }
     await pipeline.exec();
 
-    logger.debug('[leaderboard] Score added', { studentId, points, classId });
+    logger.debug('[leaderboard] Score added', { studentId, points, classId, quizId });
   } catch (err) {
     logger.error('[leaderboard] addScore failed', { error: err.message, studentId });
   }
@@ -56,11 +62,10 @@ export async function getTopStudents(scope, limit = 10, studentModel) {
   if (!client) return [];
 
   try {
+    // If global is requested but disabled, we fallback to empty or class key
     const key = scope === 'global' ? GLOBAL_KEY : classKey(scope);
-    // ZREVRANGE returns [member, score, member, score, …]
     const raw = await client.zrevrange(key, 0, limit - 1, 'WITHSCORES');
 
-    // Parse alternating [id, score] pairs
     const entries = [];
     for (let i = 0; i < raw.length; i += 2) {
       entries.push({ studentId: raw[i], score: parseFloat(raw[i + 1]) });
@@ -68,11 +73,10 @@ export async function getTopStudents(scope, limit = 10, studentModel) {
 
     if (entries.length === 0) return [];
 
-    // Bulk fetch names from MongoDB
     const ids = entries.map((e) => e.studentId);
     const students = await studentModel
       .find({ _id: { $in: ids } })
-      .select('firstName lastName')
+      .select('firstName lastName email')
       .lean();
 
     const nameMap = {};
@@ -83,12 +87,59 @@ export async function getTopStudents(scope, limit = 10, studentModel) {
       return {
         rank:      idx + 1,
         studentId: e.studentId,
-        name:      s ? `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim() : 'Unknown',
+        name:      s ? `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim() || s.email : 'Unknown',
         score:     e.score,
       };
     });
   } catch (err) {
     logger.error('[leaderboard] getTopStudents failed', { error: err.message });
+    return [];
+  }
+}
+
+/**
+ * Get top-N students for a specific quiz.
+ *
+ * @param {string} quizId
+ * @param {number} limit
+ * @param {import('mongoose').Model} studentModel
+ * @returns {Promise<Array<{rank, studentId, name, score}>>}
+ */
+export async function getQuizTopStudents(quizId, limit = 100, studentModel) {
+  const client = await getRedisClient();
+  if (!client) return [];
+
+  try {
+    const key = quizKey(quizId);
+    const raw = await client.zrevrange(key, 0, limit - 1, 'WITHSCORES');
+
+    const entries = [];
+    for (let i = 0; i < raw.length; i += 2) {
+      entries.push({ studentId: raw[i], score: parseFloat(raw[i + 1]) });
+    }
+
+    if (entries.length === 0) return [];
+
+    const ids = entries.map((e) => e.studentId);
+    const students = await studentModel
+      .find({ _id: { $in: ids } })
+      .select('firstName lastName email')
+      .lean();
+
+    const nameMap = {};
+    for (const s of students) nameMap[s._id.toString()] = s;
+
+    return entries.map((e, idx) => {
+      const s = nameMap[e.studentId];
+      return {
+        rank:      idx + 1,
+        studentId: e.studentId,
+        name:      s ? `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim() || s.email : 'Unknown',
+        score:     e.score,
+      };
+    });
+  } catch (err) {
+    logger.error('[leaderboard] getQuizTopStudents failed', { error: err.message, quizId });
     return [];
   }
 }

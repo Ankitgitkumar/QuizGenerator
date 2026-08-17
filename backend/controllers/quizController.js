@@ -187,18 +187,15 @@ export const createQuiz = async (req, res) => {
     });
     await newQuiz.save();
 
-    const questionIds = [];
-    for (let q of generatedQuestions) {
-      const question = new Question({
-        quiz: newQuiz._id,
-        type: q.type,
-        questionText: q.question,
-        options: q.type === "mcq" ? (q.options || []) : [],
-        correctAnswer: q.correctAnswer,
-      });
-      await question.save();
-      questionIds.push(question._id);
-    }
+    const questionsToInsert = generatedQuestions.map((q) => ({
+      quiz: newQuiz._id,
+      type: q.type,
+      questionText: q.question,
+      options: q.type === "mcq" ? (q.options || []) : [],
+      correctAnswer: q.correctAnswer,
+    }));
+    const insertedDocs = await Question.insertMany(questionsToInsert);
+    const questionIds = insertedDocs.map((doc) => doc._id);
 
     newQuiz.questions = questionIds;
     await newQuiz.save();

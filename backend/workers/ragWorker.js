@@ -81,18 +81,15 @@ const processor = async (job) => {
     }
 
     // ── Step 3: Save questions to MongoDB ──
-    const questionIds = [];
-    for (const q of generatedQuestions) {
-      const question = new Question({
-        quiz:         quizId,
-        type:         q.type,
-        questionText: q.question,
-        options:      q.type === 'mcq' ? (q.options || []) : [],
-        correctAnswer: q.correctAnswer,
-      });
-      await question.save();
-      questionIds.push(question._id);
-    }
+    const questionsToInsert = generatedQuestions.map((q) => ({
+      quiz:         quizId,
+      type:         q.type,
+      questionText: q.question,
+      options:      q.type === 'mcq' ? (q.options || []) : [],
+      correctAnswer: q.correctAnswer,
+    }));
+    const insertedDocs = await Question.insertMany(questionsToInsert);
+    const questionIds = insertedDocs.map((doc) => doc._id);
 
     // ── Step 4: Mark quiz as ready ──
     await Quiz.findByIdAndUpdate(quizId, {

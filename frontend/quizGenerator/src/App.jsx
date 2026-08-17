@@ -33,35 +33,38 @@ import Signin from './components/register/Signin.jsx'
 
 function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Home />} />
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+      <Navbar />
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
 
-        <Route path="/teacher/dashboard" element={<Dashboard />} />
-        <Route path="/teacher/createquiz" element={<CreateQuiz />} />
-        <Route path="/teacher/myquizzes" element={<MyQuizzes />} />
-        <Route path="/teacher/quiz/:id" element={<QuizView />} />
-        <Route path="/teacher/leaderboard" element={<Leaderboard />} />
-        <Route path="/teacher/quiz/:id/results" element={<QuizResults />} />
-        <Route path="/teacher/finalresults" element={<FinalResult />} />
+          <Route path="/teacher/dashboard" element={<Dashboard />} />
+          <Route path="/teacher/createquiz" element={<CreateQuiz />} />
+          <Route path="/teacher/myquizzes" element={<MyQuizzes />} />
+          <Route path="/teacher/quiz/:id" element={<QuizView />} />
+          <Route path="/teacher/leaderboard" element={<Leaderboard />} />
+          <Route path="/teacher/quiz/:id/results" element={<QuizResults />} />
+          <Route path="/teacher/finalresults" element={<FinalResult />} />
 
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
-        <Route path="/student/join-classroom" element={<JoinClassroom />} />
-        <Route path="/student/classroom" element={<StudentClassroom />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/join-classroom" element={<JoinClassroom />} />
+          <Route path="/student/classroom" element={<StudentClassroom />} />
 
-        <Route path="/student/practice-quiz" element={<PracticeQuiz />} />
-        <Route path="/student/practice-quiz/generate-quiz" element={<GenerateQuiz />} />
-        <Route path="/student/practice-quiz/available-quizzes" element={<AvailableQuizzes />} />
-        <Route path="/student/practice-quiz/history" element={<PreviousAttempts />} />
+          <Route path="/student/practice-quiz" element={<PracticeQuiz />} />
+          <Route path="/student/practice-quiz/generate-quiz" element={<GenerateQuiz />} />
+          <Route path="/student/practice-quiz/available-quizzes" element={<AvailableQuizzes />} />
+          <Route path="/student/practice-quiz/history" element={<PreviousAttempts />} />
 
-        <Route path="/student/quiz/attempt/:quizid" element={<QuizAttempt />} />
-        <Route path="/student/quiz/attempt/:quizid/review" element={<PracticeQuizReview />} />
-        <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
+          <Route path="/student/quiz/attempt/:quizid" element={<QuizAttempt />} />
+          <Route path="/student/quiz/attempt/:quizid/review" element={<PracticeQuizReview />} />
+          <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
 
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/signin" element={<Signin />} />
-      </Routes>
-    </>
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/signin" element={<Signin />} />
+        </Routes>
+      </main>
+    </div>
   )
 }
 

@@ -46,47 +46,59 @@ const PracticeQuizzes = () => {
   };
 
   if (loading) {
-    return <div className="text-white text-center mt-10">Loading practice quizzes...</div>;
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-50 text-slate-800">
+        <div className="flex flex-col items-center gap-3">
+          <span className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <p className="font-semibold text-slate-600 text-sm">Loading quizzes...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen px-6 py-10">
-      <h2 className="text-2xl font-bold mb-6 text-center text-white">
-        Your Practice Quizzes
-      </h2>
+    <div className="py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto fade-in">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-extrabold text-slate-900">Your Practice Quizzes</h1>
+        <button
+          onClick={() => navigate('/student/practice-quiz')}
+          className="text-xs border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl font-bold transition shadow-2xs cursor-pointer"
+        >
+          ← Back to Practice
+        </button>
+      </div>
 
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="space-y-4">
         {quizzes.length === 0 ? (
-          <p className="text-center text-gray-500">
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-400 font-semibold text-sm">
             No practice quizzes available. Generate one first!
-          </p>
+          </div>
         ) : (
           quizzes.map((quiz) => (
             <div
               key={quiz._id}
-              className="bg-gray-800 rounded-xl shadow p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+              className="bg-white border border-slate-200/80 rounded-2xl shadow-xs p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
             >
               <div>
-                <h3 className="text-lg font-semibold text-gray-200">
+                <h3 className="text-lg font-bold text-slate-900 mb-2">
                   {quiz.topic || quiz.title}
                 </h3>
-                <p className="text-sm text-gray-400">
-                  Created: {new Date(quiz.createdAt).toLocaleString()}
-                </p>
-                <p className="text-sm text-green-400">Type: Practice Quiz</p>
+                <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-800 border border-emerald-100">
+                  Practice Quiz
+                </span>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-2">
                 <button
                   onClick={() => handleAttempt(quiz._id)}
-                  className="px-4 py-2 rounded text-white bg-blue-600 hover:bg-blue-700"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Attempt
                 </button>
 
                 <button
                   onClick={() => handleDelete(quiz._id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+                  className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold text-xs rounded-xl transition cursor-pointer"
                 >
                   Delete
                 </button>

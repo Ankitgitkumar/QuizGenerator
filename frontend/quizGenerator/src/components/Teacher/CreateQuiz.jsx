@@ -79,84 +79,124 @@ const CreateQuiz = () => {
         body: formData,
       });
 
-      clearInterval(tickerId);
-      setLoadingProgress(100);
-
       const contentType = res.headers.get("content-type");
       const data = contentType?.includes("application/json") ? await res.json() : await res.text();
 
       if (!res.ok) {
+        clearInterval(tickerId);
+        setLoading(false);
         const msg = parseError({ status: res.status, data });
         toast.error(msg, { duration: 6000 });
         return;
       }
 
+      if (res.status === 202) {
+        clearInterval(tickerId);
+        setLoadingProgress(80);
+        const quizId = data.quizId;
+
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusRes = await fetch(`${API_BASE_URL}/teacher/quiz/${quizId}/status`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (statusRes.ok) {
+              const statusData = await statusRes.json();
+              if (statusData.status === "ready") {
+                clearInterval(pollInterval);
+                setLoadingProgress(100);
+                toast.success("🎉 Quiz created and generated successfully!");
+                setTimeout(() => {
+                  setLoading(false);
+                  setLoadingProgress(0);
+                  navigate("/teacher/myquizzes");
+                }, 600);
+              } else if (statusData.status === "failed") {
+                clearInterval(pollInterval);
+                setLoading(false);
+                setLoadingProgress(0);
+                toast.error("AI failed to generate quiz questions. Please try again.");
+              }
+            }
+          } catch (err) {
+            console.error("Polling error:", err);
+          }
+        }, 2000);
+
+        return;
+      }
+
+      clearInterval(tickerId);
+      setLoadingProgress(100);
       toast.success("🎉 Quiz created successfully!");
-      setTimeout(() => navigate("/teacher/myquizzes"), 600);
+      setTimeout(() => {
+        setLoading(false);
+        setLoadingProgress(0);
+        navigate("/teacher/myquizzes");
+      }, 600);
     } catch (error) {
       clearInterval(tickerId);
-      toast.error(parseError(error), { duration: 6000 });
-    } finally {
       setLoading(false);
       setLoadingProgress(0);
+      toast.error(parseError(error), { duration: 6000 });
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="text-center max-w-sm w-full px-6">
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-50">
+        <div className="text-center max-w-sm w-full px-6 fade-in">
           {/* Animated brain/AI icon */}
-          <div className="text-6xl mb-6 animate-bounce">🤖</div>
-          <h2 className="text-white text-2xl font-bold mb-2">Generating Your Quiz</h2>
-          <p className="text-gray-400 text-sm mb-8">
+          <div className="text-5xl mb-6 animate-bounce">🤖</div>
+          <h2 className="text-slate-900 text-2xl font-bold mb-2">Generating Your Quiz</h2>
+          <p className="text-slate-500 text-sm mb-8 leading-relaxed">
             {pdf
               ? "Indexing your PDF and building questions with AI..."
               : `Creating ${numQuestions} questions about "${topic}" with Gemini AI...`}
           </p>
 
           {/* Progress bar */}
-          <div className="w-full bg-gray-800 rounded-full h-3 mb-3 overflow-hidden">
+          <div className="w-full bg-slate-200 rounded-full h-3 mb-3 overflow-hidden">
             <div
-              className="h-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-700"
+              className="h-3 rounded-full bg-indigo-600 transition-all duration-700"
               style={{ width: `${Math.min(loadingProgress, 98)}%` }}
             />
           </div>
-          <p className="text-gray-500 text-xs">
+          <p className="text-slate-400 text-xs font-semibold">
             {loadingProgress < 30 ? "Connecting to Gemini AI..." :
              loadingProgress < 60 ? "Building questions..." :
              loadingProgress < 85 ? "Polishing answers..." :
              "Almost done..."}
           </p>
 
-          <p className="text-gray-600 text-xs mt-6">This usually takes 10–30 seconds</p>
+          <p className="text-slate-400 text-[11px] mt-6">This usually takes 10–30 seconds</p>
         </div>
       </div>
     );
   }
 
-  const inputClass = "w-full bg-gray-900 text-white border border-gray-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500 transition";
-  const labelClass = "block text-sm font-medium text-gray-300 mb-1.5";
+  const inputClass = "w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 transition";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black py-10 px-4">
+    <div className="min-h-[calc(100vh-80px)] bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 fade-in">
       {/* Top nav */}
-      <div className="max-w-2xl mx-auto flex items-center justify-between mb-8">
-        <Link to="/teacher/dashboard" className="text-gray-400 hover:text-white flex items-center gap-2 text-sm transition">
+      <div className="max-w-2xl mx-auto flex items-center justify-between mb-6">
+        <Link to="/teacher/dashboard" className="text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 text-sm font-semibold transition">
           ← Back to Dashboard
         </Link>
-        <span className="text-gray-500 text-sm">AI Quiz Generator</span>
+        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">AI Quiz Generator</span>
       </div>
 
       <div className="max-w-2xl mx-auto">
-        <div className="bg-gray-900/60 border border-gray-700/50 backdrop-blur rounded-3xl shadow-2xl p-6 sm:p-8">
-          <h1 className="text-white text-3xl font-bold text-center mb-1">Create New Quiz</h1>
-          <p className="text-gray-400 text-center text-sm mb-8">Powered by Gemini 2.5 Flash AI</p>
+        <div className="bg-white border border-slate-200/80 rounded-3xl shadow-sm p-6 sm:p-8">
+          <h1 className="text-slate-900 text-3xl font-extrabold text-center mb-1">Create New Quiz</h1>
+          <p className="text-slate-400 text-center text-xs font-medium mb-8">Powered by Gemini 2.5 Flash AI</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Quiz Title */}
             <div>
-              <label className={labelClass}>Quiz Title <span className="text-red-400">*</span></label>
+              <label className={labelClass}>Quiz Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={title}
@@ -170,7 +210,7 @@ const CreateQuiz = () => {
             <div>
               <label className={labelClass}>
                 Topic / Subject
-                <span className="text-gray-500 font-normal ml-2 text-xs">(or upload a PDF below)</span>
+                <span className="text-slate-400 font-normal ml-2 text-xs">(or upload a PDF below)</span>
               </label>
               <input
                 type="text"
@@ -184,15 +224,15 @@ const CreateQuiz = () => {
             {/* PDF Upload */}
             <div>
               <label className={labelClass}>Upload PDF (optional — enables RAG)</label>
-              <div className={`${inputClass} cursor-pointer flex items-center gap-3 ${pdf ? "border-green-500/60 bg-green-900/10" : ""}`}
+              <div className={`${inputClass} cursor-pointer flex items-center gap-3 ${pdf ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-slate-300 hover:border-slate-400"}`}
                 onClick={() => document.getElementById("pdf-input").click()}>
-                <span className="text-xl">{pdf ? "📄" : "📎"}</span>
-                <span className={pdf ? "text-green-300 text-sm" : "text-gray-500 text-sm"}>
+                <span className="text-lg">{pdf ? "📄" : "📎"}</span>
+                <span className={pdf ? "text-emerald-800 text-sm font-medium" : "text-slate-400 text-sm"}>
                   {pdf ? pdf.name : "Click to upload a PDF file"}
                 </span>
                 {pdf && (
                   <button type="button" onClick={(e) => { e.stopPropagation(); setPdf(null); }}
-                    className="ml-auto text-red-400 hover:text-red-300 text-xs">✕ Remove</button>
+                    className="ml-auto text-red-600 hover:text-red-700 text-xs font-bold">✕ Remove</button>
                 )}
               </div>
               <input id="pdf-input" type="file" accept=".pdf" className="hidden"
@@ -202,7 +242,7 @@ const CreateQuiz = () => {
             {/* 2-column: Questions + Duration */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Number of Questions <span className="text-red-400">*</span></label>
+                <label className={labelClass}>Number of Questions <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   min={1}
@@ -211,10 +251,10 @@ const CreateQuiz = () => {
                   onChange={(e) => setNumQuestions(Number(e.target.value))}
                   className={inputClass}
                 />
-                <p className="text-gray-600 text-xs mt-1">Max 50 questions</p>
+                <p className="text-slate-400 text-[11px] mt-1 font-medium">Max 50 questions</p>
               </div>
               <div>
-                <label className={labelClass}>Duration (minutes) <span className="text-red-400">*</span></label>
+                <label className={labelClass}>Duration (minutes) <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   min={1}
@@ -223,28 +263,28 @@ const CreateQuiz = () => {
                   onChange={(e) => setDuration(Number(e.target.value))}
                   className={inputClass}
                 />
-                <p className="text-gray-600 text-xs mt-1">Max 300 minutes</p>
+                <p className="text-slate-400 text-[11px] mt-1 font-medium">Max 300 minutes</p>
               </div>
             </div>
 
             {/* Schedule */}
             <div>
-              <label className={labelClass}>Schedule Start Time <span className="text-red-400">*</span></label>
+              <label className={labelClass}>Schedule Start Time <span className="text-red-500">*</span></label>
               <input
                 type="datetime-local"
                 value={startTime}
                 min={new Date().toISOString().slice(0, 16)}
                 onChange={(e) => setStartTime(e.target.value)}
-                className={`${inputClass} [color-scheme:dark]`}
+                className={`${inputClass} [color-scheme:light]`}
               />
-              <p className="text-gray-600 text-xs mt-1">Students can attempt after this time</p>
+              <p className="text-slate-400 text-[11px] mt-1 font-medium">Students can attempt after this time</p>
             </div>
 
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:scale-[1.01] hover:shadow-blue-500/25 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              className="w-full py-4 rounded-xl font-bold text-base bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:scale-[1.01] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>🚀</span>
               Generate Quiz with AI

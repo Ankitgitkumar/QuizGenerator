@@ -87,9 +87,6 @@ export const studentGenerateQuizSchema = z.object({
 
 export const submitQuizSchema = z.object({
   quizId: z.string().min(1, "quizId is required"),
-  responses: z
-    .record(z.string(), z.string())
-    .refine((r) => Object.keys(r).length > 0, {
-      message: "responses cannot be empty",
-    }),
+  responses: z.record(z.string(), z.string().or(z.null())).default({}),
+  disqualified: z.boolean().optional(),
 });

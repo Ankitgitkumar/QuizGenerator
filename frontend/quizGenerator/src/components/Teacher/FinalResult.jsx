@@ -10,39 +10,41 @@ const finalResults = [
 
 const FinalResult = () => {
   return (
-    <div className="min-h-screen border-2  px-6 py-10">
-      <div className="absolute top-4 right-4">
-    <Link 
-      to="/teacher/myquizzes" 
-      className="text-sm bg-gray-200 text-black font-semibold px-3 py-1 rounded hover:bg-gray-300"
-    >
-      Back
-    </Link>
-    </div>
-      <h1 className="text-3xl font-bold text-white mb-2">📋 Final Results</h1>
-      <p className="text-gray-300 mb-6">Quiz: General Knowledge | Total Questions: 10</p>
+    <div className="py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto fade-in bg-slate-50">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-2">📋 Final Results</h1>
+          <p className="text-slate-500 mt-1 text-sm font-semibold">Quiz: General Knowledge | Total Questions: 10</p>
+        </div>
+        <Link 
+          to="/teacher/myquizzes" 
+          className="text-xs border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl font-bold transition shadow-2xs"
+        >
+          ← Back to Quizzes
+        </Link>
+      </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-gray-700 rounded-xl shadow">
-          <thead className="bg-gray-800 text-gray-200">
-            <tr>
-              <th className="py-3 px-6">Rank</th>
-              <th className="py-3 px-6">Student</th>
-              <th className="py-3 px-6">Score</th>
-              <th className="py-3 px-6">Correct</th>
-              <th className="py-3 px-6">Incorrect</th>
-              <th className="py-3 px-6">Time Taken</th>
+      <div className="overflow-x-auto bg-white border border-slate-200/80 rounded-2xl shadow-xs">
+        <table className="min-w-full divide-y divide-slate-200 bg-white">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr className="text-slate-500 uppercase text-xs font-semibold tracking-wider text-center">
+              <th className="py-4 px-6">Rank</th>
+              <th className="py-4 px-6">Student</th>
+              <th className="py-4 px-6">Score</th>
+              <th className="py-4 px-6">Correct</th>
+              <th className="py-4 px-6">Incorrect</th>
+              <th className="py-4 px-6">Time Taken</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-100">
             {finalResults.map((res, idx) => (
-              <tr key={idx} className="border-t text-center text-gray-300">
-                <td className="py-3 px-6">{idx + 1}</td>
-                <td className="py-3 px-6">{res.name}</td>
-                <td className="py-3 px-6 font-bold text-green-600">{res.score}</td>
-                <td className="py-3 px-6">{res.correct}</td>
-                <td className="py-3 px-6">{res.incorrect}</td>
-                <td className="py-3 px-6">{res.time}</td>
+              <tr key={idx} className="text-slate-700 hover:bg-slate-50/80 transition duration-150 text-center border-b border-slate-100 last:border-b-0">
+                <td className="py-4 px-6 text-sm font-bold text-slate-950">{idx + 1}</td>
+                <td className="py-4 px-6 text-sm font-semibold text-slate-700">{res.name}</td>
+                <td className="py-4 px-6 text-sm font-extrabold text-emerald-600">{res.score}</td>
+                <td className="py-4 px-6 text-sm text-slate-600 font-semibold">{res.correct}</td>
+                <td className="py-4 px-6 text-sm text-slate-600 font-semibold">{res.incorrect}</td>
+                <td className="py-4 px-6 text-sm text-slate-500">{res.time}</td>
               </tr>
             ))}
           </tbody>
@@ -50,7 +52,7 @@ const FinalResult = () => {
       </div>
 
       <button
-        className="mt-8 px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800"
+        className="mt-8 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs cursor-pointer transition"
         onClick={() => window.print()}
       >
         🖨️ Print / Save as PDF

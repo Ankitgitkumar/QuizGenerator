@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, LogOut, User } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, LogOut, User, BookOpen, GraduationCap, Sparkles, FileText, BarChart } from 'lucide-react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 function Navbar() {
@@ -38,106 +38,154 @@ function Navbar() {
     navigate('/');
   };
 
-  const goToDashboard = () => {
-    if (user?.role === 'teacher') navigate('/teacher/dashboard');
-    else if (user?.role === 'student') navigate('/student/dashboard');
+  const isAttemptingQuiz = location.pathname.includes('/quiz/attempt/') && !location.pathname.includes('/review');
+
+  const navLinkClass = (path) => {
+    const isActive = location.pathname === path;
+    return `hover:text-indigo-600 cursor-pointer transition font-semibold text-sm ${
+      isActive ? 'text-indigo-600' : 'text-slate-600'
+    }`;
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-black/30 backdrop-blur-xl border-b border-white/10 text-white px-6 py-4">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80 text-slate-800 px-6 py-4 shadow-xs">
       <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <h1
-          onClick={() => navigate('/')}
-          className="text-lg font-bold bg-gradient-to-r from-violet-400 to-cyan-300 bg-clip-text text-transparent cursor-pointer"
+        <div
+          onClick={() => {
+            if (!isAttemptingQuiz) navigate('/');
+          }}
+          className={`flex items-center gap-2 cursor-pointer select-none`}
         >
-          QuizForge AI
-        </h1>
+          <BookOpen className="text-indigo-600 w-6 h-6 stroke-[2.5]" />
+          <span className="text-xl font-extrabold text-slate-900 tracking-tight">
+            QuizForge<span className="text-indigo-600 font-extrabold">AI</span>
+          </span>
+        </div>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex gap-6 items-center text-sm font-medium text-gray-300">
-          <a href="#home" className="hover:text-white cursor-pointer transition">Home</a>
-          <a href="#about" className="hover:text-white cursor-pointer transition">About</a>
-          <a href="#footer" className="hover:text-white cursor-pointer transition">Contact</a>
+        {isAttemptingQuiz ? (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold rounded-full animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+            Quiz In Progress
+          </div>
+        ) : (
+          <>
+            {/* Desktop Nav */}
+            <div className="hidden md:flex gap-8 items-center">
+              {user ? (
+                <>
+                  {user.role === 'teacher' ? (
+                    <>
+                      <Link to="/teacher/dashboard" className={navLinkClass('/teacher/dashboard')}>Dashboard</Link>
+                      <Link to="/teacher/createquiz" className={navLinkClass('/teacher/createquiz')}>Create Quiz</Link>
+                      <Link to="/teacher/myquizzes" className={navLinkClass('/teacher/myquizzes')}>My Quizzes</Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/student/dashboard" className={navLinkClass('/student/dashboard')}>Dashboard</Link>
+                      <Link to="/student/join-classroom" className={navLinkClass('/student/join-classroom')}>Join Classroom</Link>
+                      <Link to="/student/practice-quiz" className={navLinkClass('/student/practice-quiz')}>Practice Quiz</Link>
+                    </>
+                  )}
+                  <div className="h-4 w-px bg-slate-200 mx-2" />
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm font-semibold">
+                      <User size={14} className="text-slate-500" />
+                      <span className="max-w-[100px] truncate">{user.name}</span>
+                      <span className="text-[10px] text-slate-400 capitalize bg-slate-200/50 px-1.5 py-0.5 rounded">
+                        {user.role}
+                      </span>
+                    </span>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700 transition font-semibold text-sm"
+                    >
+                      <LogOut size={14} />
+                      Logout
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <a href="/#home" className="text-slate-600 hover:text-indigo-600 transition font-semibold text-sm">Home</a>
+                  <a href="/#features" className="text-slate-600 hover:text-indigo-600 transition font-semibold text-sm">Features</a>
+                  <a href="/#about" className="text-slate-600 hover:text-indigo-600 transition font-semibold text-sm">About</a>
+                  <div className="h-4 w-px bg-slate-200 mx-2" />
+                  <button
+                    onClick={() => navigate('/signin')}
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition font-semibold text-sm"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => navigate('/signup')}
+                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition shadow-sm"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
+            </div>
 
-          {user ? (
-            /* Logged-in state */
-            <div className="flex items-center gap-3">
+            {/* Mobile Hamburger */}
+            <div className="md:hidden">
               <button
-                onClick={goToDashboard}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition"
+                onClick={() => setIsOpen(!isOpen)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-700"
               >
-                <User size={14} />
-                <span className="max-w-[120px] truncate">{user.name}</span>
-                <span className="text-xs text-gray-500 capitalize">({user.role})</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/20 border border-red-500/40 text-red-400 hover:bg-red-600/30 hover:text-red-300 transition"
-              >
-                <LogOut size={14} />
-                Logout
+                {isOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
-          ) : (
-            /* Guest state */
-            <>
-              <button
-                onClick={() => navigate('/signin')}
-                className="px-4 py-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => navigate('/signup')}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg hover:scale-[1.05] transition"
-              >
-                Get Started
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Mobile hamburger */}
-        <div className="md:hidden">
-          <button onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <X size={26} /> : <Menu size={26} />}
-          </button>
-        </div>
+          </>
+        )}
       </div>
 
-      {/* Mobile menu */}
-      {isOpen && (
-        <div className="md:hidden mt-4 space-y-3 bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-          <a href="#home" className="block hover:text-white py-1" onClick={() => setIsOpen(false)}>Home</a>
-          <a href="#about" className="block hover:text-white py-1" onClick={() => setIsOpen(false)}>About</a>
-          <a href="#footer" className="block hover:text-white py-1" onClick={() => setIsOpen(false)}>Contact</a>
-
+      {/* Mobile Menu */}
+      {isOpen && !isAttemptingQuiz && (
+        <div className="md:hidden mt-4 space-y-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-lg fade-in">
           {user ? (
             <>
-              <button
-                onClick={() => { goToDashboard(); setIsOpen(false); }}
-                className="w-full py-2 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center gap-2"
-              >
-                <User size={14} /> {user.name}
-              </button>
+              {user.role === 'teacher' ? (
+                <>
+                  <Link to="/teacher/dashboard" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>Dashboard</Link>
+                  <Link to="/teacher/createquiz" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>Create Quiz</Link>
+                  <Link to="/teacher/myquizzes" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>My Quizzes</Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/student/dashboard" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>Dashboard</Link>
+                  <Link to="/student/join-classroom" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>Join Classroom</Link>
+                  <Link to="/student/practice-quiz" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>Practice Quiz</Link>
+                </>
+              )}
+              <div className="h-px bg-slate-100 my-2" />
+              <div className="px-3 py-2 flex items-center justify-between text-slate-700 text-sm font-semibold">
+                <span className="truncate max-w-[150px]">{user.name}</span>
+                <span className="text-[10px] text-slate-500 capitalize bg-slate-100 px-2 py-0.5 rounded">
+                  {user.role}
+                </span>
+              </div>
               <button
                 onClick={handleLogout}
-                className="w-full py-2 rounded-lg bg-red-600/20 border border-red-500/40 text-red-400 flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition font-semibold text-sm flex items-center justify-center gap-2"
               >
                 <LogOut size={14} /> Logout
               </button>
             </>
           ) : (
             <>
+              <a href="/#home" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>Home</a>
+              <a href="/#features" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>Features</a>
+              <a href="/#about" className="block px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold" onClick={() => setIsOpen(false)}>About</a>
+              <div className="h-px bg-slate-100 my-2" />
               <button
                 onClick={() => { navigate('/signin'); setIsOpen(false); }}
-                className="w-full py-2 rounded-lg border border-white/10 bg-white/5"
+                className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm"
               >
                 Sign In
               </button>
               <button
                 onClick={() => { navigate('/signup'); setIsOpen(false); }}
-                className="w-full py-2 rounded-lg bg-gradient-to-r from-violet-600 to-blue-600"
+                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition"
               >
                 Get Started
               </button>

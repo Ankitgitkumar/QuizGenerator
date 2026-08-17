@@ -37,17 +37,21 @@ const QuizResults = () => {
   }, [id, navigate]);
 
   if (loading) {
-    return <div className="text-white text-center mt-10">Loading results...</div>;
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-50 text-slate-800">
+        <div className="flex flex-col items-center gap-3">
+          <span className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <p className="font-semibold text-slate-600 text-sm">Loading results...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-white">
-        <p className="text-red-400 mb-4">{error}</p>
-        <button
-          onClick={() => navigate("/teacher/myquizzes")}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-        >
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-slate-50 text-red-600 p-6">
+        <p className="font-bold text-lg mb-4">{error}</p>
+        <button onClick={() => navigate("/teacher/myquizzes")} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-xs transition">
           Back to My Quizzes
         </button>
       </div>
@@ -55,41 +59,55 @@ const QuizResults = () => {
   }
 
   return (
-    <div className="min-h-screen px-6 py-10">
-      <div className="absolute top-4 right-4">
-        <Link
-          to="/teacher/myquizzes"
-          className="text-sm bg-gray-200 text-black font-semibold px-3 py-1 rounded hover:bg-gray-300"
+    <div className="py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto fade-in">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-extrabold text-slate-900">Quiz Results</h1>
+        <button
+          onClick={() => navigate("/teacher/myquizzes")}
+          className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition shadow-2xs"
         >
-          Back to Quizzes
-        </Link>
+          ← Back to Quizzes
+        </button>
       </div>
 
-      <h1 className="text-3xl font-bold text-white mb-6">Quiz Results</h1>
-
       {results.length === 0 ? (
-        <p className="text-gray-400">No submissions yet for this quiz.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-400 font-semibold text-sm">
+          No submissions yet for this quiz.
+        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-gray-800 rounded-xl shadow">
-            <thead className="bg-gray-700 text-gray-200">
+        <div className="overflow-x-auto bg-white border border-slate-200/80 rounded-2xl shadow-xs">
+          <table className="min-w-full divide-y divide-slate-200 bg-white">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="py-3 px-6 text-left">#</th>
-                <th className="py-3 px-6 text-left">Student</th>
-                <th className="py-3 px-6 text-left">Score</th>
-                <th className="py-3 px-6 text-left">Submitted At</th>
+                <th className="py-4 px-6 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
+                <th className="py-4 px-6 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Student</th>
+                <th className="py-4 px-6 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Score</th>
+                <th className="py-4 px-6 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Submitted At</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {results.map((item, idx) => {
                 const student = item.studentId || {};
                 const name = [student.firstName, student.lastName].filter(Boolean).join(" ") || student.email || "Unknown";
                 return (
-                  <tr key={item._id || idx} className="border-t text-gray-200 hover:bg-gray-700">
-                    <td className="py-3 px-6">{idx + 1}</td>
-                    <td className="py-3 px-6">{name}</td>
-                    <td className="py-3 px-6 font-semibold text-green-400">{item.score}</td>
-                    <td className="py-3 px-6">{new Date(item.attemptedAt).toLocaleString()}</td>
+                  <tr key={item._id || idx} className={`text-slate-700 hover:bg-slate-50/80 transition duration-150 ${item.disqualified ? "bg-rose-50/30" : ""}`}>
+                    <td className="py-4 px-6 text-sm font-bold text-slate-900">{idx + 1}</td>
+                    <td className="py-4 px-6 text-sm font-semibold text-slate-700">
+                      {name}
+                      {item.disqualified && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
+                          UFM Alert
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 text-sm">
+                      {item.disqualified ? (
+                        <span className="font-extrabold text-red-650">0 (Disqualified)</span>
+                      ) : (
+                        <span className="font-extrabold text-emerald-650">{item.score}</span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-slate-500">{new Date(item.attemptedAt).toLocaleString()}</td>
                   </tr>
                 );
               })}

@@ -20,6 +20,9 @@ import {
 } from "../schemas/quizSchemas.js";
 import logger from "../utils/logger.js";
 import { addScore } from "../utils/leaderboard.js";
+import { embedText } from "../utils/embeddings.js";
+import { queryVectors } from "../utils/vectorStore.js";
+import { ingestDocument } from "../utils/knowledgeBase.js";
 
 const { studentModel, quizModel, classModel, questionModel: Question, previousQuizModel: PreviousQuiz } = models;
 const JWT_STUDENT_PASSWORD = process.env.JWT_STUDENT_PASSWORD || "student_password_jwt";
@@ -31,7 +34,25 @@ const practiceQuizListKey = (studentId) => `quiz:practice:list:${studentId}`;
 const aiGenerationCacheKey = (topic) =>
   `quiz:ai:student:${crypto.createHash("md5").update(topic.trim().toLowerCase()).digest("hex")}`;
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+// RAG helper for Student Practice Quizzes
+const buildRagGenerationContentForStudent = async ({ content, query, studentId, sourceId, restrictToSource }) => {
+  const searchText = (query && query.trim()) || content.slice(0, 1000);
+  const queryEmbedding = await embedText(searchText);
+
+  const filter = restrictToSource
+    ? { studentId: { $eq: studentId }, sourceId: { $eq: sourceId } }
+    : { studentId: { $eq: studentId } };
+
+  const matches = await queryVectors(queryEmbedding, 5, filter);
+  const retrievedChunks = matches.map((m) => m.metadata?.text).filter(Boolean);
+
+  if (!retrievedChunks.length) {
+    logger.warn("RAG retrieval returned no chunks. Falling back to original content.");
+    return content;
+  }
+
+  return `Use the retrieved document context below to generate the quiz. Prefer facts from this retrieved context only.\n\nUser query/topic:\n${searchText}\n\nRetrieved context:\n${retrievedChunks.join("\n\n---\n\n")}`;
+};
 
 route.post("/signup", authLimiter, validate(signupSchema), async (req, res) => {
   try {
@@ -73,16 +94,20 @@ route.post("/signin", authLimiter, validate(signinSchema), async (req, res) => {
 route.post("/joinclassroom", studentMiddleware, validate(joinClassroomSchema), async (req, res) => {
   const { code } = req.body;
 
-  const existingClass = await classModel.findOne({ code });
+  if (!code) return res.status(400).json({ error: "Classroom code is required" });
+
+  const formattedCode = code.trim().toUpperCase();
+  const existingClass = await classModel.findOne({ code: formattedCode });
   if (!existingClass) return res.status(404).json({ error: "Classroom not found" });
 
-  if (!existingClass.students.includes(req.studentId)) {
+  existingClass.students = existingClass.students || [];
+  if (!existingClass.students.some((id) => id && id.toString() === req.studentId)) {
     existingClass.students.push(req.studentId);
     await existingClass.save();
   }
   await studentModel.findByIdAndUpdate(req.studentId, { classId: existingClass._id });
 
-  logger.info("Student joined classroom", { studentId: req.studentId, code });
+  logger.info("Student joined classroom", { studentId: req.studentId, code: formattedCode });
   res.status(200).json({ message: "Student joined classroom successfully" });
 });
 
@@ -96,14 +121,16 @@ route.post(
   async (req, res) => {
     const { topic } = req.body;
     const studentId = req.studentId;
-    const numberOfQuestions = 10;
+    const numberOfQuestions = parseInt(req.body.numberOfQuestions) || 10;
 
     let content = topic;
+    let hasUploadedDocument = false;
 
     if (req.file && fs.existsSync(req.file.path)) {
       const dataBuffer = fs.readFileSync(req.file.path);
       const pdfData = await pdfParse(dataBuffer);
       content = pdfData.text;
+      hasUploadedDocument = true;
       fs.unlinkSync(req.file.path);
     }
 
@@ -119,7 +146,7 @@ route.post(
     let cacheKey = null;
     let fromCache = false;
 
-    if (!req.file && topic.trim()) {
+    if (!hasUploadedDocument && topic.trim()) {
       cacheKey = aiGenerationCacheKey(topic);
       const cached = await getCache(cacheKey);
       if (cached) {
@@ -130,8 +157,26 @@ route.post(
     }
 
     if (!generatedQuestions) {
-      logger.info("Generating student practice quiz", { topic, numberOfQuestions });
-      generatedQuestions = await generateQuizFromText(content, numberOfQuestions);
+      if (hasUploadedDocument) {
+        logger.info("Ingesting student PDF for RAG practice quiz...", { studentId });
+        const sourceId = `student-quiz-${Date.now()}`;
+        await ingestDocument(content, { id: sourceId, sourceId, topic, studentId });
+
+        logger.info("Retrieving relevant context for student RAG quiz generation...");
+        const ragContent = await buildRagGenerationContentForStudent({
+          content,
+          query: topic,
+          studentId,
+          sourceId,
+          restrictToSource: true,
+        });
+
+        logger.info("Generating student practice RAG quiz", { topic, numberOfQuestions });
+        generatedQuestions = await generateQuizFromText(ragContent, numberOfQuestions);
+      } else {
+        logger.info("Generating student practice quiz", { topic, numberOfQuestions });
+        generatedQuestions = await generateQuizFromText(content, numberOfQuestions);
+      }
 
       if (cacheKey && generatedQuestions?.length > 0) {
         await setCache(cacheKey, generatedQuestions, 86400); // 24h TTL
@@ -151,18 +196,15 @@ route.post(
     });
     await newQuiz.save();
 
-    const questionIds = [];
-    for (let q of generatedQuestions) {
-      const question = new Question({
-        quiz: newQuiz._id,
-        type: q.type,
-        questionText: q.question,
-        options: q.type === "mcq" ? (q.options || []) : [],
-        correctAnswer: q.correctAnswer,
-      });
-      await question.save();
-      questionIds.push(question._id);
-    }
+    const questionsToInsert = generatedQuestions.map((q) => ({
+      quiz: newQuiz._id,
+      type: q.type,
+      questionText: q.question,
+      options: q.type === "mcq" ? (q.options || []) : [],
+      correctAnswer: q.correctAnswer,
+    }));
+    const insertedDocs = await Question.insertMany(questionsToInsert);
+    const questionIds = insertedDocs.map((doc) => doc._id);
 
     newQuiz.questions = questionIds;
     await newQuiz.save();
@@ -188,12 +230,25 @@ route.post("/quizzes/attempt", studentMiddleware, async (req, res) => {
       return res.status(403).json({ error: "Quiz not assigned to your classroom" });
     }
 
+    const attemptExists = await PreviousQuiz.findOne({ studentId: req.studentId, quizId });
+    if (attemptExists) {
+      return res.status(403).json({ error: "You have already completed this classroom quiz. Only one attempt is permitted." });
+    }
+
     const quiz = await quizModel.findById(quizId);
     if (!quiz) return res.status(404).json({ error: "Quiz not found" });
 
     const now = new Date();
-    if (!quiz.isScheduled || !quiz.scheduleAt || new Date(quiz.scheduleAt) > now) {
+    const scheduleDate = quiz.scheduleAt ? new Date(quiz.scheduleAt) : null;
+    const durationMin = quiz.duration || 30;
+
+    if (!quiz.isScheduled || !scheduleDate || now < scheduleDate) {
       return res.status(403).json({ error: "Quiz is not yet available" });
+    }
+
+    const closingDate = new Date(scheduleDate.getTime() + durationMin * 60 * 1000);
+    if (now > closingDate) {
+      return res.status(403).json({ error: "This quiz window has closed and is no longer available to attempt." });
     }
 
     const Questions = await Promise.all(
@@ -209,7 +264,7 @@ route.post("/quizzes/attempt", studentMiddleware, async (req, res) => {
       })
     );
 
-    res.status(200).json({ Questions });
+    res.status(200).json({ Questions, duration: quiz.duration });
   } catch (error) {
     logger.error("Error fetching quiz attempt", { error: error.message });
     res.status(500).json({ error: "Error fetching quiz attempt: " + error.message });
@@ -222,6 +277,11 @@ route.post("/quizzes/practice/attempt", studentMiddleware, async (req, res) => {
   try {
     const { quizId } = req.body;
     if (!quizId) return res.status(400).json({ error: "quizId is required" });
+
+    const prevDisqualified = await PreviousQuiz.findOne({ studentId: req.studentId, quizId, disqualified: true });
+    if (prevDisqualified) {
+      return res.status(403).json({ error: "You were disqualified from this practice quiz due to tab switching. Re-attempts are blocked." });
+    }
 
     const quiz = await quizModel.findById(quizId);
     if (!quiz) return res.status(404).json({ error: "Quiz not found" });
@@ -243,10 +303,48 @@ route.post("/quizzes/practice/attempt", studentMiddleware, async (req, res) => {
       })
     );
 
-    return res.status(200).json({ Questions });
+    return res.status(200).json({ Questions, duration: quiz.duration });
   } catch (error) {
     logger.error("Error fetching practice quiz", { error: error.message });
     return res.status(500).json({ error: "Error fetching practice quiz: " + error.message });
+  }
+});
+
+// ─── Update Ongoing Score ──────────────────────────────────────────────────────
+
+route.post("/quizzes/ongoing-score", studentMiddleware, async (req, res) => {
+  try {
+    const { quizId, responses } = req.body;
+    const studentId = req.studentId;
+
+    if (!quizId || !responses) {
+      return res.status(400).json({ error: "quizId and responses are required" });
+    }
+
+    const quiz = await quizModel.findById(quizId).populate("questions");
+    if (!quiz) return res.status(404).json({ error: "Quiz not found" });
+
+    let correctCount = 0;
+
+    for (const question of quiz.questions) {
+      const answer = responses[question._id];
+      if (answer !== undefined && answer !== null) {
+        const normalizedAnswer = typeof answer === "string" ? answer.trim().toLowerCase() : "";
+        const correctNormalized = String(question.correctAnswer || "").trim().toLowerCase();
+        if (normalizedAnswer === correctNormalized) {
+          correctCount += 1;
+        }
+      }
+    }
+
+    const student = await studentModel.findById(studentId).select('classId').lean();
+    await addScore(studentId, correctCount, student?.classId?.toString() ?? null, quizId);
+
+    logger.debug("Ongoing score updated", { studentId, quizId, score: correctCount });
+    res.status(200).json({ ongoingScore: correctCount });
+  } catch (err) {
+    logger.error("Failed to update ongoing score", { error: err.message });
+    res.status(500).json({ error: "Failed to update ongoing score" });
   }
 });
 
@@ -254,17 +352,26 @@ route.post("/quizzes/practice/attempt", studentMiddleware, async (req, res) => {
 
 route.post("/quizzes/submit", studentMiddleware, validate(submitQuizSchema), async (req, res) => {
   try {
-    const { quizId, responses } = req.body;
+    const { quizId, responses, disqualified } = req.body;
     const studentId = req.studentId;
 
     const quiz = await quizModel.findById(quizId).populate("questions");
     if (!quiz) return res.status(404).json({ error: "Quiz not found" });
 
+    // Enforce single submission rule for classroom quizzes
+    const isClassroomQuiz = quiz.createdBy.toString() !== studentId.toString();
+    if (isClassroomQuiz) {
+      const existingAttempt = await PreviousQuiz.findOne({ studentId, quizId });
+      if (existingAttempt) {
+        return res.status(400).json({ error: "You have already submitted this classroom quiz. Multiple attempts are blocked." });
+      }
+    }
+
     let correctCount = 0;
     const attemptedQuestions = [];
 
     for (const question of quiz.questions) {
-      const answer = responses[question._id];
+      const answer = responses ? responses[question._id] : undefined;
       const normalizedAnswer = typeof answer === "string" ? answer.trim().toLowerCase() : "";
       const correctNormalized = String(question.correctAnswer || "").trim().toLowerCase();
 
@@ -279,20 +386,22 @@ route.post("/quizzes/submit", studentMiddleware, validate(submitQuizSchema), asy
       });
     }
 
-    const score = correctCount;
+    const isDisqualified = !!disqualified;
+    const score = isDisqualified ? 0 : correctCount;
 
     await PreviousQuiz.create({
       studentId,
       quizId,
       questions: attemptedQuestions,
-      responses,
+      responses: responses || {},
       score,
+      disqualified: isDisqualified,
       attemptedAt: new Date(),
     });
 
     // ── Update leaderboard (fire-and-forget — never blocks the response) ──
     const student = await studentModel.findById(studentId).select('classId').lean();
-    addScore(studentId, score, student?.classId?.toString() ?? null).catch((err) =>
+    addScore(studentId, score, student?.classId?.toString() ?? null, quizId).catch((err) =>
       logger.warn('[leaderboard] Background score update failed', { error: err.message })
     );
 

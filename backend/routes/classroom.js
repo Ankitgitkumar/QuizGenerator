@@ -2,7 +2,7 @@ import express from 'express';
 import db from "../db.js";
 import mongoose from "mongoose";
 import studentMiddleware from "../middlewares/student.js";
-const { classModel, quizModel, studentModel, teacherModel } = db;
+const { classModel, quizModel, studentModel, teacherModel, previousQuizModel } = db;
 const route = express.Router();
 
 // Create a classroom (teacher only)
@@ -41,7 +41,10 @@ route.post("/join", studentMiddleware, async (req, res) => {
 		const { code } = req.body;
 		const studentId = req.studentId;
 
-		const classroom = await classModel.findOne({ code });
+		if (!code) return res.status(400).json({ message: "Classroom code is required" });
+
+		const formattedCode = code.trim().toUpperCase();
+		const classroom = await classModel.findOne({ code: formattedCode });
 		if (!classroom) return res.status(404).json({ message: "Classroom not found" });
 
 		// Assign the classroom to the student
@@ -49,7 +52,7 @@ route.post("/join", studentMiddleware, async (req, res) => {
 
 		// Keep track of which students are in each classroom
 		classroom.students = classroom.students || [];
-		if (!classroom.students.some((id) => id.toString() === studentId)) {
+		if (!classroom.students.some((id) => id && id.toString() === studentId)) {
 			classroom.students.push(studentId);
 			await classroom.save();
 		}
@@ -97,7 +100,12 @@ route.get("/me", studentMiddleware, async (req, res) => {
 		const classroom = await classModel
 			.findById(student.classId)
 			.populate({ path: "quizzes", model: "Quiz" });
-		res.json({ classroom });
+
+		// Fetch all attempts for this student to determine completed quizzes
+		const attempts = await previousQuizModel.find({ studentId: req.studentId }).select("quizId").lean();
+		const attemptedQuizIds = attempts.map((a) => a.quizId.toString());
+
+		res.json({ classroom, attemptedQuizIds });
 	} catch (err) {
 		res.status(500).json({ message: err.message });
 	}

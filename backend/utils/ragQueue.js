@@ -62,8 +62,7 @@ export async function isRedisAvailable() {
   let client;
   try {
     client = new Redis({
-      host: cfg.host,
-      port: cfg.port,
+      ...cfg,
       lazyConnect: true,
       maxRetriesPerRequest: 0,
       enableOfflineQueue: false,
